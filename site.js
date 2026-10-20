@@ -15,7 +15,7 @@ const sauve = () => { try { localStorage.setItem('sel', JSON.stringify(sel)); } 
 
 /* ---------- Menu, pied de page, sélection (communs à toutes les pages) ---------- */
 const liens = [['index.html', 'Accueil', 'home'], ['creations.html', 'Créations', 'creations'], ['anciennes.html', 'Anciennes créations', 'anciennes'], ['marches.html', 'Marchés', 'marches'], ['contact.html', 'Contact', 'contact']];
-document.body.insertAdjacentHTML('afterbegin', '<nav class="nav"><a class="marque" href="index.html"><img src="assets/logo.png" alt="" width="34" height="34">Willbwa</a>' +
+document.body.insertAdjacentHTML('afterbegin', '<nav class="nav"><a class="marque" href="index.html"><img src="logo.png" alt="" width="34" height="34">Willbwa</a>' +
   liens.map(l => '<a href="' + l[0] + '"' + (l[2] === page ? ' aria-current="page"' : '') + '>' + l[1] + '</a>').join('') + '</nav>');
 document.body.insertAdjacentHTML('beforeend', `<footer>© Willbwa · Artisan en Belgique · <a href="${INSTA}" target="_blank" rel="noopener">Instagram</a></footer>
 <button id="fab" class="btn" hidden>Ma sélection (<span id="nb">0</span>)</button>
