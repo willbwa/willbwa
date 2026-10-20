@@ -9,6 +9,7 @@ const eur = n => n.toFixed(2).replace('.', ',') + ' €';
 const dateFr = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 const aujourdhui = () => new Date().toLocaleDateString('sv-SE');
 const page = document.body.dataset.page;
+const maxi = id => { const p = data.catalogue.find(x => String(x.id) === String(id)); return p && p.reste != null ? p.reste : 99; };
 let data = { catalogue: [], marches: [], contact: {} }, filtre = 'Tout', sel = {};
 try { sel = JSON.parse(localStorage.getItem('sel') || '{}'); } catch (e) {}
 const sauve = () => { try { localStorage.setItem('sel', JSON.stringify(sel)); } catch (e) {} };
@@ -46,18 +47,18 @@ async function charger() {
 /* ---------- Affichage ---------- */
 const carte = (p, anc) => '<article class="card"><img loading="lazy" src="' + esc(img(p.photo)) + '" alt="' + esc(p.nom) + '"><div><h3>' + esc(p.nom) + '</h3><small>' + esc(p.description) + '</small>' +
   (anc ? '<a class="btn" href="contact.html?creation=' + encodeURIComponent(p.nom) + '">Je veux du sur-mesure</a>'
-    : '<span class="prix">' + eur(p.prix) + '</span>' + (p.disponibilite === 'sur commande' ? '<small>Sur commande</small>' : '') +
+    : '<span class="prix">' + eur(p.prix) + '</span>' + (p.disponibilite === 'sur commande' ? '<small>Sur commande</small>' : p.reste === 1 ? '<small>Pièce unique</small>' : p.reste > 1 ? '<small>Il en reste ' + p.reste + '</small>' : '') +
       '<button class="btn" data-id="' + esc(p.id) + '"' + (p.disponibilite === 'épuisé' ? ' disabled>Épuisé' : '>Ajouter à ma sélection') + '</button>') + '</div></article>';
 
 function liste(anc) {
-  const src = data.catalogue.filter(p => (p.disponibilite === 'ancien') === anc);
+  const src = data.catalogue.filter(p => (p.disponibilite === 'ancien') === anc).reverse();   // les plus récentes (dernières lignes du Sheet) en premier
   const cats = ['Tout'].concat([...new Set(src.map(p => p.categorie).filter(Boolean))]);
   $('#chips').innerHTML = cats.map(c => '<button class="chip" aria-pressed="' + (c === filtre) + '" data-c="' + esc(c) + '">' + esc(c) + '</button>').join(' ');
   $('#chips').querySelectorAll('button').forEach(b => b.onclick = () => { filtre = b.dataset.c; liste(anc); });
   const q = $('#q').value.toLowerCase();
   const l = src.filter(p => (filtre === 'Tout' || p.categorie === filtre) && (p.nom + ' ' + p.description).toLowerCase().includes(q));
   $('#grille').innerHTML = l.length ? l.map(p => carte(p, anc)).join('') : '<p class="vide">' + (src.length ? 'Aucune création ne correspond à ta recherche.' : 'Les créations arrivent bientôt.') + '</p>';
-  $('#grille').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => { sel[b.dataset.id] = Math.min(99, (sel[b.dataset.id] || 0) + 1); maj(); });
+  $('#grille').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => { sel[b.dataset.id] = Math.min(maxi(b.dataset.id), (sel[b.dataset.id] || 0) + 1); maj(); });
 }
 
 const galerie = m => m.photos && m.photos.length ? '<div class="galerie">' + m.photos.map(u => '<a href="' + esc(img(u, 1600)) + '" target="_blank" rel="noopener"><img loading="lazy" src="' + esc(img(u)) + '" alt="Photo du marché : ' + esc(m.lieu) + '"></a>').join('') + '</div>' : '';
@@ -91,8 +92,9 @@ const pages = {
 
 /* ---------- Sélection et réservation ---------- */
 function maj() {
-  const ids = Object.keys(sel).filter(id => data.catalogue.some(p => String(p.id) === id && p.disponibilite !== 'ancien') && sel[id] > 0);
+  const ids = Object.keys(sel).filter(id => data.catalogue.some(p => String(p.id) === id && p.disponibilite !== 'ancien' && p.disponibilite !== 'épuisé') && sel[id] > 0);
   Object.keys(sel).forEach(k => { if (!ids.includes(k)) delete sel[k]; });
+  ids.forEach(k => { sel[k] = Math.min(sel[k], maxi(k)); });
   sauve();
   const n = ids.reduce((s, id) => s + sel[id], 0);
   $('#nb').textContent = n; $('#fab').hidden = !n;
@@ -103,7 +105,7 @@ function maj() {
   }).join('');
   $('#total').textContent = 'Total des articles : ' + eur(t);
   $('#lignes').querySelectorAll('[data-m]').forEach(b => b.onclick = () => { sel[b.dataset.m]--; maj(); });
-  $('#lignes').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { sel[b.dataset.p] = Math.min(99, sel[b.dataset.p] + 1); maj(); });
+  $('#lignes').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { sel[b.dataset.p] = Math.min(maxi(b.dataset.p), sel[b.dataset.p] + 1); maj(); });
   if (!n && $('#dlg').open) $('#dlg').close();
 }
 $('#fab').onclick = () => $('#dlg').showModal();
