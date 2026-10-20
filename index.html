@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Willbwa : créations artisanales en bois, porte-clés et cadeaux personnalisés</title>
+<meta name="description" content="Willbwa, artisan belge : porte-clés, décapsuleurs, bougies et objets en bois faits main. Retrouve-moi sur les marchés artisanaux et de Noël, ou réserve en ligne.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Newsreader:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceee8;--ink:#1e2b24;--soft:#53625a;--forest:#2e4b3c;--oak:#b9822f;--wood:#4a3320;--card:#f7f8f4;--line:#cfd5c9;--err:#a4322a;
+--h:'Bricolage Grotesque','Trebuchet MS',sans-serif;--b:'Newsreader',Georgia,serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#161d19;--ink:#e8ece4;--soft:#a3b0a8;--forest:#7fb399;--oak:#d9a55a;--card:#1f2823;--line:#34423a;--err:#ff8f86}}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.6 var(--b)}
+h1,h2,h3,.nav,button,label,input,select,textarea{font-family:var(--h)}
+a{color:var(--forest)}:focus-visible{outline:3px solid var(--oak);outline-offset:2px}
+.nav{position:sticky;top:0;z-index:5;display:flex;gap:18px;align-items:center;padding:12px 20px;background:var(--bg);border-bottom:1px solid var(--line);font-weight:500;font-size:15px}
+.nav b{font-weight:800;font-size:19px;margin-right:auto}.nav a{text-decoration:none;color:var(--ink)}
+.hero{background:repeating-linear-gradient(97deg,#4a3320 0 7px,#573b25 7px 9px,#4a3320 9px 21px,#3f2b1b 21px 23px,#4d3722 23px 38px);color:#f3ead8;padding:72px 20px 64px}
+.hero div{max-width:900px;margin:auto}
+.hero h1{font-size:clamp(56px,13vw,150px);line-height:.9;margin:0 0 20px;font-weight:800;letter-spacing:-.04em}
+.hero p{font-size:22px;max-width:30em;margin:0 0 26px}
+.btn{display:inline-block;border:0;border-radius:6px;background:var(--oak);color:#1b1208;font-weight:700;font-size:16px;padding:12px 20px;cursor:pointer;text-decoration:none}
+.btn.alt{background:transparent;color:inherit;border:2px solid currentColor}
+section{max-width:1000px;margin:auto;padding:56px 20px}
+h2{font-size:34px;margin:0 0 8px;font-weight:800;letter-spacing:-.02em}.lead{color:var(--soft);margin:0 0 24px}
+.tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font-size:16px}
+.tools input{flex:1 1 220px;width:auto}
+.chip{padding:9px 14px;border:1px solid var(--line);border-radius:99px;background:transparent;color:var(--ink);font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--forest);border-color:var(--forest);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:4px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--line);display:block}
+.card div{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card h3{margin:0;font-size:18px}.card small{color:var(--soft)}.prix{font-family:var(--h);font-weight:700}
+.card .btn{margin-top:auto;padding:9px 12px;font-size:14px}.card .btn[disabled]{opacity:.5;cursor:not-allowed}
+.marche{display:flex;gap:18px;padding:16px 0;border-top:1px solid var(--line)}
+.marche time{font-family:var(--h);font-weight:700;min-width:130px}
+.vide{color:var(--soft);font-style:italic}
+#about p{max-width:38em}
+form{display:grid;gap:14px;max-width:560px}label{font-size:14px;font-weight:500;display:grid;gap:4px}
+.piege{position:absolute;left:-9999px}.msg{font-family:var(--h);font-weight:500}.msg.err{color:var(--err)}.msg.ok{color:var(--forest)}
+#fab{position:fixed;right:16px;bottom:16px;z-index:6;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+dialog{border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:min(620px,94vw);max-height:90vh;padding:24px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.ligne{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-family:var(--h);font-size:15px}
+.ligne span:first-child{flex:1}.ligne button{width:32px;height:32px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);cursor:pointer}
+footer{padding:30px 20px;text-align:center;color:var(--soft);font-size:15px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<nav class="nav"><b>Willbwa</b><a href="#creations">Créations</a><a href="#marches">Marchés</a><a href="#about">À propos</a><a href="#contact">Contact</a></nav>
+
+<header class="hero"><div>
+<h1>Willbwa</h1>
+<p>Porte-clés, décapsuleurs, bougies : des objets en bois faits à la main, en Belgique.</p>
+<a class="btn" href="#creations">Voir les créations</a> <a class="btn alt" href="#marches">Où me trouver</a>
+</div></header>
+
+<section id="creations">
+<h2>Créations</h2>
+<p class="lead">Choisis ce qui te plaît et envoie une demande de réservation. Il n’y a pas de paiement en ligne.</p>
+<div class="tools"><input id="q" type="search" placeholder="Rechercher une création" aria-label="Rechercher"><span id="chips"></span></div>
+<div id="grille" class="grid" aria-live="polite"><p class="vide">Chargement des créations…</p></div>
+</section>
+
+<section id="marches">
+<h2>Mes prochains marchés</h2>
+<p class="lead">Tu peux y retirer ta réservation et payer sur place.</p>
+<div id="liste-marches"><p class="vide">Chargement…</p></div>
+</section>
+
+<section id="about">
+<h2>À propos</h2>
+<p>Je m’appelle William, artisan belge. Je fabrique mes créations en bois dans mon atelier, une pièce à la fois : porte-clés, décapsuleurs, bougies et bien d’autres objets. Chaque pièce est unique, le bois et le grain ne sont jamais tout à fait les mêmes.</p>
+<p>Tu me croises sur les marchés artisanaux et les marchés de Noël. Tu peux aussi réserver ici, et récupérer ta commande sur un marché ou chez moi. Si tu habites loin, je peux l’envoyer par la poste : tu paies alors par virement.</p>
+</section>
+
+<section id="contact">
+<h2>Contact</h2>
+<p class="lead">Une question, une idée de cadeau personnalisé ? Écris-moi.</p>
+<form id="f-contact">
+<label>Nom<input name="nom" required maxlength="80" autocomplete="name"></label>
+<label>E-mail<input name="email" type="email" required maxlength="120" autocomplete="email"></label>
+<label>Message<textarea name="message" rows="5" required maxlength="1500"></textarea></label>
+<input class="piege" name="piege" tabindex="-1" autocomplete="off" aria-hidden="true">
+<label style="font-weight:400;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" required style="width:auto;margin-top:5px"><span>J’accepte que mes données servent uniquement à répondre à ma demande. Elles ne sont pas partagées.</span></label>
+<button class="btn" type="submit">Envoyer le message</button><p class="msg" id="m-contact" role="status"></p>
+</form>
+</section>
+
+<footer>© Willbwa · Artisan en Belgique</footer>
+
+<button id="fab" class="btn" hidden>Ma sélection (<span id="nb">0</span>)</button>
+
+<dialog id="dlg">
+<h2 style="font-size:26px">Ma sélection</h2>
+<div id="lignes"></div>
+<p><b id="total" class="prix"></b></p>
+<form id="f-res">
+<label>Prénom<input name="client" required maxlength="80" autocomplete="given-name"></label>
+<label>E-mail<input name="email" type="email" required maxlength="120" autocomplete="email"></label>
+<label>Téléphone (facultatif)<input name="telephone" type="tel" maxlength="30" autocomplete="tel"></label>
+<label>Comment veux-tu les recevoir ?
+<select name="remise" id="remise"><option value="marche">Retrait à un marché (paiement sur place)</option><option value="domicile">Retrait chez Willbwa (paiement sur place)</option><option value="envoi">Envoi par la poste (paiement par virement)</option></select></label>
+<label id="l-marche">Marché<select name="marche" id="sel-marche"></select></label>
+<label id="l-adresse" hidden>Adresse d’envoi<textarea name="adresse" rows="3" maxlength="250"></textarea></label>
+<p class="lead" id="info-envoi" hidden></p>
+<label>Un mot pour moi (facultatif)<textarea name="note" rows="2" maxlength="500"></textarea></label>
+<input class="piege" name="piege" tabindex="-1" autocomplete="off" aria-hidden="true">
+<label style="font-weight:400;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" required style="width:auto;margin-top:5px"><span>J’accepte que mes données servent uniquement à traiter cette réservation.</span></label>
+<p class="lead" style="margin:0">Ce n’est pas encore une commande : je te réponds pour confirmer.</p>
+<div><button class="btn" type="submit">Envoyer ma réservation</button> <button class="btn alt" type="button" id="fermer">Fermer</button></div>
+<p class="msg" id="m-res" role="status"></p>
+</form>
+</dialog>
+
+<script>
+// Colle ici le lien terminé par /exec (déploiement Apps Script)
+const API = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnT6YcfQoDUfs0Em8PGCI2iBiQhZqMiLd4-VT32H8usKI1aHkXOHu6cd-MFLIbKgg-sXoV9q1mQEt3jTrYHYt8yunTHyIW1vXcDpdr4SZtXgrnXUXmzNzSvGKRotMrsl0xyf0UG8ms61jSNx7dlQ0Zu45foJvy_6H0yi1JIsC2Z9CSGyD_sJIvq85yD_GmyISVIFaQuTx1ED71O9fikl4a7xJLHxsUvgSw4boVk8vYVC1dWjut1KX2Vh0zQQsgp-MliH4DFg27Pbyuxy1xeAwiH9elx9Hw&lib=M1pLKAeINapH0YzTAgpvXU8Mq0vWOSgOC';
+
+const $ = s => document.querySelector(s);
+let data = { catalogue: [], marches: [] }, filtre = 'Tout', sel = {};
+try { sel = JSON.parse(localStorage.getItem('sel') || '{}'); } catch (e) {}
+
+const img = u => { const m = String(u || '').match(/[-\w]{25,}/); return m ? 'https://drive.google.com/thumbnail?id=' + m[0] + '&sz=w600' : ''; };
+const eur = n => n.toFixed(2).replace('.', ',') + ' €';
+const esc = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dateFr = s => new Date(s + 'T12:00:00').toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+const sauve = () => { try { localStorage.setItem('sel', JSON.stringify(sel)); } catch (e) {} };
+
+fetch(API).then(r => r.json()).then(d => { data = d; init(); })
+  .catch(() => { $('#grille').innerHTML = '<p class="vide">Impossible de charger les créations pour le moment. Réessaie plus tard ou écris-moi.</p>'; $('#liste-marches').innerHTML = ''; });
+
+function init() {
+  const cats = ['Tout'].concat([...new Set(data.catalogue.map(p => p.categorie).filter(Boolean))]);
+  $('#chips').innerHTML = cats.map(c => '<button class="chip" aria-pressed="' + (c === filtre) + '" data-c="' + esc(c) + '">' + esc(c) + '</button>').join(' ');
+  $('#chips').querySelectorAll('button').forEach(b => b.onclick = () => { filtre = b.dataset.c; init(); });
+  const q = $('#q').value.toLowerCase();
+  const l = data.catalogue.filter(p => (filtre === 'Tout' || p.categorie === filtre) && (p.nom + ' ' + p.description).toLowerCase().includes(q));
+  $('#grille').innerHTML = l.length ? l.map(p => {
+    const ok = p.disponibilite !== 'épuisé';
+    return '<article class="card"><img loading="lazy" src="' + img(p.photo) + '" alt="' + esc(p.nom) + '"><div><h3>' + esc(p.nom) + '</h3><small>' + esc(p.description) + '</small><span class="prix">' + eur(p.prix) + '</span>' +
+      (p.disponibilite === 'sur commande' ? '<small>Sur commande</small>' : '') +
+      '<button class="btn" data-id="' + esc(p.id) + '"' + (ok ? '' : ' disabled') + '>' + (ok ? 'Ajouter à ma sélection' : 'Épuisé') + '</button></div></article>';
+  }).join('') : '<p class="vide">Aucune création ne correspond à ta recherche.</p>';
+  $('#grille').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => { sel[b.dataset.id] = (sel[b.dataset.id] || 0) + 1; maj(); });
+  $('#liste-marches').innerHTML = data.marches.length ? data.marches.map(m => '<div class="marche"><time>' + esc(dateFr(m.date)) + '</time><div><b>' + esc(m.lieu) + '</b><br>' + esc(m.horaires) + (m.remarque ? '<br><small>' + esc(m.remarque) + '</small>' : '') + '</div></div>').join('') : '<p class="vide">Pas de marché annoncé pour le moment. Reviens bientôt ou écris-moi.</p>';
+  $('#sel-marche').innerHTML = data.marches.map(m => '<option value="' + esc(dateFr(m.date) + ' : ' + m.lieu) + '">' + esc(dateFr(m.date) + ' : ' + m.lieu) + '</option>').join('');
+  $('#info-envoi').textContent = data.frais_envoi || '';
+  maj();
+}
+$('#q').oninput = init;
+
+function maj() {
+  const ids = Object.keys(sel).filter(id => data.catalogue.some(p => String(p.id) === id) && sel[id] > 0);
+  Object.keys(sel).forEach(k => { if (!ids.includes(k)) delete sel[k]; });
+  sauve();
+  const n = ids.reduce((s, id) => s + sel[id], 0);
+  $('#nb').textContent = n; $('#fab').hidden = !n;
+  let t = 0;
+  $('#lignes').innerHTML = ids.map(id => {
+    const p = data.catalogue.find(x => String(x.id) === id); t += p.prix * sel[id];
+    return '<div class="ligne"><span>' + esc(p.nom) + '</span><button data-m="' + esc(id) + '" aria-label="Retirer un">−</button><span>' + sel[id] + '</span><button data-p="' + esc(id) + '" aria-label="Ajouter un">+</button><span>' + eur(p.prix * sel[id]) + '</span></div>';
+  }).join('');
+  $('#total').textContent = 'Total des articles : ' + eur(t);
+  $('#lignes').querySelectorAll('[data-m]').forEach(b => b.onclick = () => { sel[b.dataset.m]--; maj(); });
+  $('#lignes').querySelectorAll('[data-p]').forEach(b => b.onclick = () => { sel[b.dataset.p] = Math.min(99, sel[b.dataset.p] + 1); maj(); });
+  if (!n && $('#dlg').open) $('#dlg').close();
+}
+$('#fab').onclick = () => $('#dlg').showModal();
+$('#fermer').onclick = () => $('#dlg').close();
+$('#remise').onchange = e => {
+  const v = e.target.value;
+  $('#l-marche').hidden = v !== 'marche'; $('#l-adresse').hidden = v !== 'envoi'; $('#info-envoi').hidden = v !== 'envoi';
+  $('#sel-marche').required = v === 'marche' && data.marches.length > 0;
+};
+
+async function envoyer(form, corps, msg, apres) {
+  const m = $(msg), b = form.querySelector('[type=submit]');
+  m.className = 'msg'; m.textContent = 'Envoi en cours…'; b.disabled = true;
+  try {
+    const r = await (await fetch(API, { method: 'POST', body: JSON.stringify(corps) })).json();
+    if (!r.ok) throw new Error(r.erreur || 'Erreur');
+    m.className = 'msg ok'; m.textContent = 'Merci, c’est envoyé ! Tu reçois une confirmation par e-mail.';
+    apres && apres(); form.reset();
+  } catch (e) {
+    m.className = 'msg err'; m.textContent = (e.message || 'Envoi impossible') + ' Tu peux aussi m’écrire directement' + (data.contact ? ' : ' + data.contact : '.');
+  } finally { b.disabled = false; }
+}
+$('#f-contact').onsubmit = e => { e.preventDefault(); envoyer(e.target, Object.assign(Object.fromEntries(new FormData(e.target)), { type: 'contact' }), '#m-contact'); };
+$('#f-res').onsubmit = e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  f.type = 'reservation'; f.articles = Object.keys(sel).map(id => ({ id: id, quantite: sel[id] }));
+  envoyer(e.target, f, '#m-res', () => { sel = {}; sauve(); setTimeout(maj, 2500); });
+};
+</script>
+</body>
+</html>
