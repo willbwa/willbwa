@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Création personnalisée et projets en bois | Willbwa</title>
+<meta name="description" content="Une idée d’objet en bois ? Demande une création personnalisée à partir d’une pièce Willbwa, ou imaginons un projet ensemble. Réponse par e-mail.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Willbwa">
+<meta property="og:locale" content="fr_BE">
+<meta property="og:title" content="Création personnalisée et projets en bois">
+<meta property="og:description" content="Une idée d’objet en bois ? Demande une création personnalisée à partir d’une pièce Willbwa, ou imaginons un projet ensemble. Réponse par e-mail.">
+<meta property="og:image" content="https://willbwa.github.io/willbwa/apercu.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="logo.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="projet">
+<main><section>
+<h1 id="p-titre">Imaginons un projet ensemble</h1>
+<p class="lead" id="p-intro"></p>
+<div id="insp"></div>
+<div class="note"><b>Ceci est une demande de projet, pas une commande.</b> Je regarde si c’est réalisable et dans quel budget, puis je te réponds par e-mail. Il se peut aussi que ce ne soit pas possible : tu ne t’engages à rien avant que nous soyons d’accord.</div>
+<form id="f-projet">
+<label>Ton prénom<input name="prenom" required maxlength="80" autocomplete="given-name"></label>
+<label>Ton adresse e-mail<input name="email" type="email" required maxlength="120" autocomplete="email"><span class="aide">Obligatoire : c’est là que je te réponds et que je peux t’envoyer photos et plans.</span></label>
+<div data-for="creation" class="grp" hidden>
+<input type="hidden" name="creation">
+<label>Qu’aimerais-tu modifier par rapport à cette création ?<textarea name="modification" rows="4" maxlength="1500" data-reqmode="creation"></textarea></label>
+</div>
+<div data-for="libre" class="grp">
+<label>Quel est ton projet ?<input name="projet" maxlength="150" data-reqmode="libre" placeholder="Ex. : une étagère, un plateau, une lampe…"></label>
+<label>À quoi servirait-il ? (facultatif)<textarea name="usage" rows="2" maxlength="400"></textarea></label>
+</div>
+<label><span data-for="creation">Autre chose à me dire ? (facultatif)</span><span data-for="libre">Décris ton idée</span><textarea name="description" rows="5" maxlength="2000" data-reqmode="libre"></textarea></label>
+<label>Dimensions souhaitées (facultatif)<input name="dimensions" maxlength="150" placeholder="Ex. : environ 30 cm de haut"></label>
+<label>Essence de bois préférée (facultatif)<input name="bois" maxlength="150" placeholder="Pas de préférence ? Je te conseillerai."></label>
+<label>Budget approximatif (facultatif)<input name="budget" maxlength="80" placeholder="Ex. : autour de 80 €"><span class="aide">Je te dirai si c’est réalisable dans ce budget.</span></label>
+<label>Photo d’inspiration, croquis ou dessin (facultatif)<input id="p-fichiers" type="file" accept="image/*" multiple><span class="aide">3 photos maximum. Elles sont réduites automatiquement avant l’envoi.</span></label>
+<div id="p-minis"></div>
+<input class="piege" name="piege" tabindex="-1" autocomplete="off" aria-hidden="true">
+<label style="font-weight:400;display:flex;gap:8px;align-items:flex-start"><input type="checkbox" required style="width:auto;margin-top:5px"><span>J’accepte que mes données et mes photos servent uniquement à répondre à ma demande. Elles sont effacées automatiquement après <span class="cons-p">12</span> mois.</span></label>
+<button class="btn" type="submit">Envoyer ma demande de projet</button><p class="msg" id="m-projet" role="status"></p>
+</form>
+</section></main>
+<script src="site.js"></script>
+</body>
+</html>
