@@ -34,7 +34,7 @@ const sauve = () => { try { localStorage.setItem('sel', JSON.stringify(sel)); lo
 const liens = [['index.html', 'Accueil', 'home'], ['creations.html', 'Créations', 'creations'], ['anciennes.html', 'Anciennes créations', 'anciennes'], ['projet.html', 'Personnalisation', 'projet'], ['marches.html', 'Marchés', 'marches'], ['infos.html', 'Infos pratiques', 'infos'], ['contact.html', 'Contact', 'contact']];
 document.body.insertAdjacentHTML('afterbegin', '<nav class="nav"><a class="marque" href="index.html"><img src="logo-nav.png" alt="" width="34" height="34">Willbwa</a>' +
   liens.map(l => '<a href="' + l[0] + '"' + (l[2] === page || (page === 'categorie' && l[2] === 'creations') ? ' aria-current="page"' : '') + '>' + l[1] + '</a>').join('') + '</nav>');
-document.body.insertAdjacentHTML('beforeend', `<footer><p>Par catégorie : <a href="porte-cles.html">Porte-clés</a> · <a href="decapsuleurs.html">Décapsuleurs</a> · <a href="lampes.html">Lampes</a> · <a href="bougies.html">Bougies</a></p>© Willbwa · Artisan en Belgique · <a href="${INSTA}" target="_blank" rel="noopener">Instagram</a> · <a href="infos.html#donnees">Données et confidentialité</a></footer>
+document.body.insertAdjacentHTML('beforeend', `<footer><p>Par catégorie : <a href="porte-cles.html">Porte-clés</a> · <a href="decapsuleurs.html">Décapsuleurs</a> · <a href="lampes.html">Lampes</a> · <a href="bougies.html">Bougeoirs</a></p>© Willbwa · Artisan en Belgique · <a href="${INSTA}" target="_blank" rel="noopener">Instagram</a> · <a href="infos.html#donnees">Données et confidentialité</a></footer>
 <div id="toast" role="status" hidden></div>
 <button id="fab" class="btn" hidden>Ma sélection (<span id="nb">0</span>)</button>
 <dialog id="dlg"><h2 style="font-size:26px">Ma sélection</h2><div id="lignes"></div><p><b id="total" class="prix"></b></p>
@@ -316,9 +316,88 @@ if ($('#f-projet')) {
   };
 }
 
+/* ---------- Corrections éditoriales du catalogue ---------- */
+// Les données restent dans Google Sheets ; ces corrections harmonisent leur affichage
+// sans modifier les identifiants, les stocks, les prix, les photos ni les réservations.
+function corrigerCatalogue(liste) {
+  const noms = {
+    29: 'Porte-clés sifflet Secret en abricotier',
+    28: 'Vase en châtaignier',
+    27: 'Bougeoir en cerisier',
+    26: 'Vase en bouleau échauffé',
+    25: 'Vase en saule',
+    24: 'Bougeoir en bois (essence inconnue)',
+    23: 'Pot à crayons en saule',
+    22: 'Bougeoir en frêne',
+    21: 'Bougeoir en saule',
+    20: 'Vase en cerisier',
+    19: 'Porte-clés en noyer argenté',
+    18: 'Bougeoir en hêtre',
+    17: 'Porte-clés en noyer doré',
+    16: 'Bouchon de vin en saule',
+    15: 'Porte-clés en olivier argenté',
+    14: 'Porte-clés en olivier doré',
+    13: 'Bouchon de vin en frêne',
+    12: 'Bouchon de vin en châtaignier',
+    11: 'Décapsuleur en iroko',
+    10: 'Décapsuleur en frêne',
+    9: 'Décapsuleur en saule avec collerette en zebrano',
+    8: 'Décapsuleur en saule avec collerette en chêne fumé',
+    7: 'Porte-clés sifflet Secret en saule',
+    6: 'Lampe en Y',
+    4: 'Lampe avec bras',
+    3: 'Lampe grotte',
+    2: 'Lampe demi-écorces',
+    1: 'Bic Streamline'
+  };
+  const remplacements = [
+    [/Porte Clef/gi, 'Porte-clés'], [/Porte-clef/gi, 'Porte-clés'],
+    [/Bouheoir/gi, 'Bougeoir'], [/Vas en bois/gi, 'Vase en bois'],
+    [/crrayon/gi, 'crayons'], [/secrette/gi, 'secrète'],
+    [/Décasuleur/gi, 'Décapsuleur'], [/zebranno/gi, 'zebrano'],
+    [/chataîgnier/gi, 'châtaignier'], [/champignion/gi, 'champignon'],
+    [/fisures/gi, 'fissures'], [/présicer/gi, 'préciser'],
+    [/présenté sur la photo/gi, 'présentés sur la photo'],
+    [/essence de bois inconu/gi, 'essence de bois inconnue']
+  ];
+  const descriptions = {
+    29: 'Ce porte-clés sifflet cache un petit compartiment secret dans son tube central en laiton de 7 mm. Il est réalisé en bois d’abricotier et reçoit une finition lisse et brillante.',
+    7: 'Ce porte-clés sifflet cache un petit compartiment secret dans son tube central en laiton de 7 mm. Il est réalisé en bois de saule et reçoit une finition lisse et brillante.',
+    28: 'Vase tourné dans du bois de châtaignier. Une petite fissure a été réparée ; elle reste visible à l’arrière du vase.',
+    24: 'Le tournage laisse apparaître les fibres du bois coupées, ce qui donne à la surface un aspect particulier. Son état est très bon.',
+    18: 'Ce bougeoir a été tourné dans d’anciens pieds de lit en hêtre : une façon de donner une seconde vie à ce bois.',
+    26: 'Vase tourné dans du bouleau échauffé, dont les marques naturelles dessinent des nuances et des lignes dans le bois. Il est accompagné d’un insert en verre de 30 mm de diamètre et de 10 cm de long.',
+    25: 'Vase tourné dans du bois de saule. Il est accompagné d’un insert en verre de 30 mm de diamètre et de 10 cm de long.',
+    20: 'Vase tourné dans du bois de cerisier. Il est accompagné d’un insert en verre de 30 mm de diamètre et de 10 cm de long.',
+    6: 'Une branche de noisetier conserve sa forme naturelle en Y et devient le support de cette lampe. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.',
+    4: 'Le bois se prolonge de chaque côté comme deux bras, ce qui donne à cette lampe sa forme particulière. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.',
+    3: 'Cette lampe en noisetier présente une cavité naturelle qui lui donne son aspect de petite grotte. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.',
+    2: 'Cette lampe conserve une partie des écorces du bois, pour garder son aspect naturel. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.'
+  };
+  return (liste || []).map(p => {
+    const id = String(p.id);
+    const q = { ...p };
+    if (noms[id]) q.nom = noms[id];
+    for (const [reg, texte] of remplacements) {
+      if (typeof q.nom === 'string') q.nom = q.nom.replace(reg, texte);
+      if (typeof q.description === 'string') q.description = q.description.replace(reg, texte);
+      if (typeof q.categorie === 'string') q.categorie = q.categorie.replace(reg, texte);
+      if (typeof q.essence === 'string') q.essence = q.essence.replace(reg, texte);
+      if (typeof q.finition === 'string') q.finition = q.finition.replace(reg, texte);
+    }
+    if (descriptions[id]) q.description = descriptions[id];
+    if (id === '29') q.essence = 'Abricotier';
+    if (id === '7') q.essence = 'Saule';
+    if (id === '26') q.essence = 'Bouleau échauffé';
+    if (id === '18') q.essence = 'Hêtre';
+    if (id === '6' || id === '3') q.essence = 'Noisetier';
+    return q;
+  });
+}
+
 /* ---------- Démarrage rapide : on affiche tout de suite la dernière version connue, puis on la met à jour ---------- */
 function demarrer(d) {
-  data = d;
+  data = { ...d, catalogue: corrigerCatalogue(d.catalogue || []) };
   $('#sel-marche').innerHTML = aVenir().map(m => '<option value="' + esc(dateAff(m) + ' : ' + m.lieu) + '">' + esc(dateAff(m) + ' : ' + m.lieu) + '</option>').join('');
   $('#info-envoi').textContent = d.frais_envoi || '';
   const cs = d.conservation || {};
