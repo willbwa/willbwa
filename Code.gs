@@ -50,6 +50,19 @@ function creerStructure() {
   Logger.log(msg); ss.toast(msg, 'Structure', 20);
 }
 
+// À lancer UNE FOIS après avoir mis à jour le script : ajoute « ordre » au Catalogue et le menu 1 à 5.
+function ajouterOrdreCatalogue() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet(), f = ss.getSheetByName('Catalogue');
+  if (!f) throw new Error('Onglet Catalogue introuvable.');
+  const h = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0];
+  let col = h.indexOf('ordre') + 1;
+  if (!col) { col = f.getLastColumn() + 1; f.getRange(1, col).setValue('ordre').setFontWeight('bold').setBackground('#d9ead3'); }
+  f.getRange(2, col, Math.max(1, f.getMaxRows() - 1), 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(['1', '2', '3', '4', '5'], true).setAllowInvalid(false).build());
+  f.setColumnWidth(col, 75);
+  ss.toast('Colonne ordre ajoutée : choisis 1 à 5 pour chaque article.', 'Catalogue', 10);
+}
+
 /* ---------- Outils ---------- */
 function lire_(nom) {
   const f = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nom);
