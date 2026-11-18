@@ -131,7 +131,10 @@ function reservesActives_() {
 function donneesPubliques_() {
   const cfg = config_();
   const reserves = reservesActives_();
-  const catalogue = lire_('Catalogue').filter(r => oui_(r.visible)).map(r => {
+  const catalogue = lire_('Catalogue').filter(r => oui_(r.visible)).reverse().sort((a, b) => {
+    const oa = Number(a.ordre), ob = Number(b.ordre), ra = oa >= 1 && oa <= 5 ? oa : 6, rb = ob >= 1 && ob <= 5 ? ob : 6;
+    return ra - rb;
+  }).map(r => {
     const reste = reste_(r), res = reserves[String(r.id)] || 0;
     const dispo0 = String(r.disponibilite).trim().toLowerCase();
     let dispo = dispo0, etat = dispo0 === 'ancien' ? 'ancien' : dispo0 === 'épuisé' ? 'epuise' : dispo0 === 'sur commande' ? 'commande' : 'disponible';
@@ -142,7 +145,7 @@ function donneesPubliques_() {
     return { id: String(r.id), nom: r.nom, categorie: r.categorie, description: r.description,
       prix: dispo === 'ancien' ? 0 : Number(r.prix) || 0,   // pas de prix pour les anciennes créations
       photo: r.photo, reste: reste, disponibilite: dispo, etat: etat,
-      essence: String(r.essence || ''), dimensions: String(r.dimensions || ''), finition: String(r.finition || ''), ordre: Number(r.ordre) || 0 };
+      essence: String(r.essence || ''), dimensions: String(r.dimensions || ''), finition: String(r.finition || '') };
   });
   const marches = lire_('Marches').filter(r => oui_(r.public)).map(r => ({
     date: dateIso_(r.date), date_fin: dateIso_(r.date_fin), lieu: r.lieu, horaires: r.horaires, remarque: r.remarque,
