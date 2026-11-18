@@ -71,7 +71,7 @@ const carte = (p, anc, i) => '<article class="card' + (p.etat === 'reserve' ? ' 
 function liste(anc) {
   const motif = document.body.dataset.cat ? new RegExp(document.body.dataset.cat) : null;   // page d'une catégorie
   const norm = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[-_]/g, ' ');
-  const src = data.catalogue.filter(p => (p.disponibilite === 'ancien') === anc && (!motif || motif.test(norm(p.categorie)))).reverse().sort((a, b) => (a.etat === 'reserve') - (b.etat === 'reserve'));
+  const src = data.catalogue.filter(p => (p.disponibilite === 'ancien') === anc && (!motif || motif.test(norm(p.categorie)))).sort((a, b) => (a.etat === 'reserve') - (b.etat === 'reserve'));
   const outils = document.querySelector('.tools');   // peu d'anciennes créations : inutile d'afficher recherche et filtres
   if (outils) { const cacher = anc && src.length <= 12 && !$('#q').value; outils.hidden = cacher; outils.style.display = cacher ? 'none' : ''; }   // les plus récentes (dernières lignes du Sheet) en premier
   const cats = ['Tout'].concat(!anc && src.some(p => p.reste === 1) ? ['Pièces uniques'] : [], [...new Set(src.map(p => p.categorie).filter(Boolean))]);
