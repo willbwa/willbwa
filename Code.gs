@@ -63,6 +63,62 @@ function ajouterOrdreCatalogue() {
   ss.toast('Colonne ordre ajoutée : choisis 1 à 5 pour chaque article.', 'Catalogue', 10);
 }
 
+// À lancer UNE FOIS : met à jour les fiches du Catalogue par ID, sans modifier la colonne photo.
+function appliquerCorrectionsCatalogue() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet(), f = ss.getSheetByName('Catalogue');
+  if (!f) throw new Error('Onglet Catalogue introuvable.');
+  const h = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0];
+  const col = nom => h.indexOf(nom) + 1;
+  ['id','nom','categorie','description','essence','dimensions','finition'].forEach(n => {
+    if (col(n) < 1) throw new Error('Colonne manquante : ' + n);
+  });
+  let ordre = col('ordre');
+  if (!ordre) { ordre = f.getLastColumn() + 1; f.getRange(1, ordre).setValue('ordre').setFontWeight('bold').setBackground('#d9ead3'); }
+  f.setColumnWidth(ordre, 75);
+  f.getRange(2, ordre, Math.max(1, f.getMaxRows() - 1), 1).setDataValidation(
+    SpreadsheetApp.newDataValidation().requireValueInList(['1','2','3','4','5'], true).setAllowInvalid(false).build());
+  const corrections = {
+    1:['Stylo Bic Streamline en olivier','Stylo',"Stylo Bic Streamline équipé d'une cartouche d'encre noire. L'embout est de couleur vieux bronze.",'Olivier','13,5 cm de longueur',''],
+    2:['Lampe demi-écorces','Lampe',"La lampe conserve une partie de son écorce, pour un aspect naturel. Elle est équipée d'une douille E27 et fournie avec une ampoule standard. Prête à l'emploi.",'','',''],
+    3:['Lampe grotte en noisetier','Lampe',"Une petite cavité sur le côté lui donne son aspect de grotte. Douille E27 et ampoule standard fournies. Lampe prête à l'emploi.",'Noisetier','',''],
+    4:['Lampe avec bras','Lampe',"Deux prolongements de bois s'étendent de chaque côté, comme des bras. Douille E27 et ampoule standard fournies. Lampe prête à l'emploi.",'','',''],
+    6:['Lampe en Y en noisetier','Lampe',"Réalisée à partir d'une branche naturellement ramifiée en Y. Douille E27 et ampoule standard fournies. Lampe prête à l'emploi.",'Noisetier','',''],
+    7:['Porte-clés sifflet Secret en saule','Porte-clés sifflet',"Ce sifflet renferme une petite cachette dans son tube central. Il est réalisé autour d'un tube creux en laiton de 7 mm et présente une finition brillante et lisse.",'Saule','','Finition brillante et lisse'],
+    8:['Décapsuleur en saule avec colorette en chêne fumé','Décapsuleur avec colorette','La colorette en chêne fumé apporte un contraste de couleur au corps en bois.','Saule','',''],
+    9:['Décapsuleur en saule avec colorette en zebrano','Décapsuleur avec colorette','La colorette en zebrano, bois exotique, apporte un contraste de veinage et de couleur.','Saule','',''],
+    10:['Décapsuleur en frêne','Décapsuleur','Décapsuleur façonné dans cette essence de bois.','Frêne','',''],
+    11:['Décapsuleur en iroko','Décapsuleur',"Plusieurs modèles sont présentés sur la photo. Prix à la pièce ; merci d'indiquer votre choix en commentaire.",'Iroko','',''],
+    12:['Bouchon de vin en châtaignier','Bouchon de vin',"Plusieurs modèles sont présentés sur la photo. Prix à la pièce ; merci d'indiquer votre choix en commentaire.",'Châtaignier','',''],
+    13:['Bouchon de vin en frêne','Bouchon de vin',"Plusieurs modèles sont présentés sur la photo. Prix à la pièce ; merci d'indiquer votre choix en commentaire.",'Frêne','',''],
+    14:['Porte-clés en olivier – finition dorée','Porte-clés',"Réalisé autour d'un tube creux en laiton de 7 mm, avec des embouts adaptés à ce modèle.",'Olivier','','Finition dorée'],
+    15:['Porte-clés en olivier – finition argentée','Porte-clés',"Réalisé autour d'un tube creux en laiton de 7 mm, avec des embouts adaptés à ce modèle.",'Olivier','','Finition argentée'],
+    16:['Bouchon de vin en saule','Bouchon de vin',"Plusieurs modèles sont présentés sur la photo. Prix à la pièce ; merci d'indiquer votre choix en commentaire.",'Saule','',''],
+    17:['Porte-clés en noyer – finition dorée','Porte-clés',"Réalisé autour d'un tube creux en laiton de 7 mm, avec des embouts adaptés à ce modèle.",'Noyer','','Finition dorée'],
+    18:['Bougeoir en hêtre recyclé','Bougeoir',"Ces pièces étaient autrefois des pieds de lit. Le bois a été récupéré et transformé en bougeoirs, pour lui offrir une seconde vie. Plusieurs modèles sont présentés : prix à la pièce, choix à préciser en commentaire.",'Hêtre','',''],
+    19:['Porte-clés en noyer – finition argentée','Porte-clés',"Réalisé autour d'un tube creux en laiton de 7 mm, avec des embouts adaptés à ce modèle.",'Noyer','','Finition argentée'],
+    20:['Vase en cerisier','Vase','Un insert en verre est fourni (30 mm de diamètre et 10 cm de profondeur).','Cerisier','',''],
+    21:['Bougeoir en saule','Bougeoir',"Plusieurs modèles sont présentés sur la photo. Prix à la pièce ; merci d'indiquer votre choix en commentaire.",'Saule','',''],
+    22:['Bougeoir en frêne','Bougeoir',"Plusieurs modèles sont présentés sur la photo. Prix à la pièce ; merci d'indiquer votre choix en commentaire.",'Frêne','',''],
+    23:['Pot à crayons en saule','Pot à crayons','Pot à crayons tourné dans du bois de saule.','Saule','',''],
+    24:['Bougeoir en bois – essence inconnue','Bougeoir',"L'essence n'a pas pu être identifiée. Le tournage fait apparaître les fibres coupées du bois, qui donnent à la surface un aspect particulier. Son état est très bon.",'Essence inconnue','',''],
+    25:['Vase en saule','Vase',"Un insert en verre est fourni (30 mm de diamètre et 10 cm de profondeur). Plusieurs modèles sont présentés : prix à la pièce, choix à préciser en commentaire.",'Saule','',''],
+    26:['Vase en bouleau échauffé','Vase',"Le bois présente une marque laissée par le champignon ainsi qu'une ligne noire. Un insert en verre est fourni (30 mm de diamètre et 10 cm de profondeur).",'Bouleau échauffé','',''],
+    27:['Petit bougeoir en cerisier','Bougeoir','Petit bougeoir tourné dans du bois de cerisier.','Cerisier','',''],
+    28:['Petit vase en châtaignier','Vase',"Une petite fissure à l'arrière a été recollée. Sa trace reste légèrement visible.",'Châtaignier','',''],
+    29:['Porte-clés sifflet Secret en abricotier','Porte-clés sifflet',"Ce sifflet renferme une petite cachette dans son tube central. Il est réalisé autour d'un tube creux en laiton de 7 mm et présente une finition brillante et lisse.",'Abricotier','','Pâte abrasive + huile']
+  };
+  const valeurs = f.getDataRange().getValues(), ci = h.indexOf('id');
+  let faits = 0;
+  for (let r = 1; r < valeurs.length; r++) {
+    const id = Number(valeurs[r][ci]), d = corrections[id];
+    if (!d) continue;
+    ['nom','categorie','description','essence','dimensions','finition'].forEach((k,j) => f.getRange(r+1,col(k)).setValue(d[j]));
+    faits++;
+  }
+  try { cacheVider_(); } catch(e) {}
+  ss.toast(faits + ' fiches corrigées. Photos et autres données conservées.', 'Catalogue', 10);
+}
+
 /* ---------- Outils ---------- */
 function lire_(nom) {
   const f = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(nom);
