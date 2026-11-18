@@ -174,7 +174,7 @@ function montrer(i) {
 function ouvrir(id, anc) {
   const p = data.catalogue.find(x => String(x.id) === String(id)), f = p ? fotos(p) : [];
   if (!f.length) return;
-  const car = [['Essence', p.essence], ['Dimensions', p.dimensions], ['Finition', p.finition]].filter(x => x[1]).map(x => '<li><b>' + x[0] + ' :</b> ' + esc(x[1]) + '</li>').join('');
+  const car = [['Dimensions', p.dimensions], ['Finition', p.finition]].filter(x => x[1]).map(x => '<li><b>' + x[0] + ' :</b> ' + esc(x[1]) + '</li>').join('');
   const etat = p.etat === 'reserve' ? 'Cette pièce est réservée.' : p.etat === 'vendu' ? 'Cette pièce a été vendue.' : '';
   const info = esc(p.description) + (car ? '<ul class="car">' + car + '</ul>' : '') + (anc ? (etat ? '<br><b>' + etat + '</b>' : '')
     : '<br><b class="prix">' + eur(p.prix) + '</b>' + (p.reste === 1 ? ' · Pièce unique' : p.reste > 1 ? ' · Il en reste ' + p.reste : '') + (etat ? ' · <b>' + etat + '</b>' : ''));
