@@ -4,7 +4,7 @@ const SITE_URL = 'https://willbwa.github.io/willbwa/';
 const INSTA_URL = 'https://www.instagram.com/artisan_willbwa/';
 
 const ONGLETS = {
-  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'quantite', 'essence', 'dimensions', 'finition'],
+  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'quantite', 'essence', 'dimensions', 'finition', 'ordre'],
   Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
   Reservations: ['date_heure', 'client', 'email', 'telephone', 'remise', 'marche', 'adresse', 'articles', 'total', 'statut', 'note', 'ids_qte', 'stock_rendu'],
   Messages: ['date_heure', 'nom', 'email', 'message'],
@@ -28,6 +28,10 @@ function creerStructure() {
       SpreadsheetApp.newDataValidation().requireValueInList(vals, true).setAllowInvalid(false).build()));
   liste('Catalogue', 7, ['en stock', 'sur commande', 'épuisé', 'ancien']);
   liste('Catalogue', 8, ['oui', 'non']);
+  essai('liste de choix de l’ordre esthétique', () => {
+    const f = ss.getSheetByName('Catalogue'), h = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0], col = h.indexOf('ordre') + 1;
+    if (col > 0) f.getRange(2, col, 500, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['1','2','3','4','5'], true).setAllowInvalid(false).build());
+  });
   liste('Marches', 5, ['oui', 'non']);
   liste('Projets', 14, ['nouvelle', 'en discussion', 'acceptée', 'refusée', 'terminée']);   // colonne statut
   liste('Reservations', 10, ['nouvelle', 'confirmée', 'payée', 'prête', 'remise ou envoyée', 'annulée']);   // colonne statut
@@ -138,7 +142,7 @@ function donneesPubliques_() {
     return { id: String(r.id), nom: r.nom, categorie: r.categorie, description: r.description,
       prix: dispo === 'ancien' ? 0 : Number(r.prix) || 0,   // pas de prix pour les anciennes créations
       photo: r.photo, reste: reste, disponibilite: dispo, etat: etat,
-      essence: String(r.essence || ''), dimensions: String(r.dimensions || ''), finition: String(r.finition || '') };
+      essence: String(r.essence || ''), dimensions: String(r.dimensions || ''), finition: String(r.finition || ''), ordre: Number(r.ordre) || 0 };
   });
   const marches = lire_('Marches').filter(r => oui_(r.public)).map(r => ({
     date: dateIso_(r.date), date_fin: dateIso_(r.date_fin), lieu: r.lieu, horaires: r.horaires, remarque: r.remarque,
