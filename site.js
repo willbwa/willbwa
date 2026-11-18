@@ -61,7 +61,7 @@ const etiquette = p => p.etat === 'reserve' ? '<span class="badge res">Réservé
 const vignette = (p, eager) => { const f = fotos(p); return '<button class="vignette" type="button" aria-label="Voir les photos de ' + esc(p.nom) + '">' +
   (f.length ? '<img ' + (eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async" src="' + esc(img(f[0])) + '" alt="' + esc(p.nom) + '">' : '<span class="sansphoto">Photo à venir</span>') +
   etiquette(p) + (f.length > 1 ? '<span class="nbph">' + f.length + ' photos</span>' : '') + '</button>'; };
-const detail = p => [p.essence, p.dimensions].filter(Boolean).map(esc).join(' · ');
+const detail = p => [p.dimensions].filter(Boolean).map(esc).join(' · ');
 const carte = (p, anc, i) => '<article class="card' + (p.etat === 'reserve' ? ' reserve' : '') + '" data-pid="' + esc(p.id) + '">' + vignette(p, i < 4) + '<div><h3>' + esc(p.nom) + '</h3>' +
   (detail(p) ? '<small><b>' + detail(p) + '</b></small>' : '') + '<small>' + esc(p.description) + '</small>' +
   (anc ? '<a class="btn" href="projet.html?creation=' + encodeURIComponent(p.nom) + '">Je veux une création personnalisée</a>'
@@ -341,16 +341,17 @@ function corrigerCatalogue(liste) {
     12: 'Bouchon de vin en châtaignier',
     11: 'Décapsuleur en iroko',
     10: 'Décapsuleur en frêne',
-    9: 'Décapsuleur en saule avec collerette en zebrano',
-    8: 'Décapsuleur en saule avec collerette en chêne fumé',
+    9: 'Décapsuleur en saule avec colorette en zebrano',
+    8: 'Décapsuleur en saule avec colorette en chêne fumé',
     7: 'Porte-clés sifflet Secret en saule',
-    6: 'Lampe en Y',
+    6: 'Lampe en Y en noisetier',
     4: 'Lampe avec bras',
-    3: 'Lampe grotte',
+    3: 'Lampe grotte en noisetier',
     2: 'Lampe demi-écorces',
     1: 'Bic Streamline'
   };
   const remplacements = [
+    [/collerette/gi, 'colorette'],
     [/Porte Clef/gi, 'Porte-clés'], [/Porte-clef/gi, 'Porte-clés'],
     [/Bouheoir/gi, 'Bougeoir'], [/Vas en bois/gi, 'Vase en bois'],
     [/crrayon/gi, 'crayons'], [/secrette/gi, 'secrète'],
@@ -369,10 +370,10 @@ function corrigerCatalogue(liste) {
     26: 'Vase tourné dans du bouleau échauffé, dont les marques naturelles dessinent des nuances et des lignes dans le bois. Il est accompagné d’un insert en verre de 30 mm de diamètre et de 10 cm de long.',
     25: 'Vase tourné dans du bois de saule. Il est accompagné d’un insert en verre de 30 mm de diamètre et de 10 cm de long.',
     20: 'Vase tourné dans du bois de cerisier. Il est accompagné d’un insert en verre de 30 mm de diamètre et de 10 cm de long.',
-    6: 'Une branche de noisetier conserve sa forme naturelle en Y et devient le support de cette lampe. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.',
-    4: 'Le bois se prolonge de chaque côté comme deux bras, ce qui donne à cette lampe sa forme particulière. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.',
-    3: 'Cette lampe en noisetier présente une cavité naturelle qui lui donne son aspect de petite grotte. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.',
-    2: 'Cette lampe conserve une partie des écorces du bois, pour garder son aspect naturel. Équipée d’une douille E27. Ampoule standard fournie. Lampe prête à l’emploi.'
+    6: 'Une branche naturellement ramifiée conserve sa forme en Y et devient le support de cette lampe. Équipée d’une douille E27 et fournie avec une ampoule standard, elle est prête à l’emploi.',
+    4: 'Le bois se prolonge de chaque côté comme deux bras, ce qui donne à cette lampe sa forme particulière. Équipée d’une douille E27 et fournie avec une ampoule standard, elle est prête à l’emploi.',
+    3: 'Une cavité naturelle lui donne son aspect de petite grotte. Équipée d’une douille E27 et fournie avec une ampoule standard, elle est prête à l’emploi.',
+    2: 'Elle conserve une partie des écorces du bois, pour garder son aspect naturel. Équipée d’une douille E27 et fournie avec une ampoule standard, elle est prête à l’emploi.'
   };
   return (liste || []).map(p => {
     const id = String(p.id);
