@@ -63,7 +63,7 @@ const vignette = (p, eager) => { const f = fotos(p); return '<button class="vign
   etiquette(p) + (f.length > 1 ? '<span class="nbph">' + f.length + ' photos</span>' : '') + '</button>'; };
 const detail = p => [p.essence, p.dimensions].filter(Boolean).map(esc).join(' · ');
 const carte = (p, anc, i) => '<article class="card' + (p.etat === 'reserve' ? ' reserve' : '') + '" data-pid="' + esc(p.id) + '">' + vignette(p, i < 4) + '<div><h3>' + esc(p.nom) + '</h3>' +
-  (detail(p) ? '<small><b>' + detail(p) + '</b></small>' : '') + '<small>' + esc(p.description) + '</small>' +
+  (detail(p) ? '<small><b>' + detail(p) + '</b></small>' : '') + (p.description ? '<small class="extrait">' + esc(String(p.description).length > 135 ? String(p.description).slice(0, 132).trimEnd() + '…' : p.description) + '</small>' : '') +
   (anc ? '<a class="btn" href="projet.html?creation=' + encodeURIComponent(p.nom) + '">Je veux une création personnalisée</a>'
     : '<span class="prix">' + eur(p.prix) + '</span>' + (p.disponibilite === 'sur commande' ? '<small>Sur commande</small>' : p.reste > 1 ? '<small>Il en reste ' + p.reste + '</small>' : '') +
       '<button class="btn" data-id="' + esc(p.id) + '"' + (p.etat === 'reserve' ? ' disabled>Déjà réservé' : p.disponibilite === 'épuisé' ? ' disabled>Épuisé' : '>Ajouter à ma sélection') + '</button>') + '</div></article>';
@@ -150,7 +150,7 @@ function recentes() {   // bandeau de l'accueil : uniquement les créations clas
   const l = data.catalogue.filter(p => Number(p.ordre) === 1 && fotos(p).length), a = $('#recentes'), ancre = document.querySelector('#about');
   if (a) a.remove();
   if (!ancre || !l.length) return;
-  ancre.insertAdjacentHTML('beforebegin', '<section id="recentes"><h2>Quelques belles créations</h2><div class="bande">' + l.map(p => '<button type="button" class="vig" data-pid="' + esc(p.id) + '" aria-label="Voir ' + esc(p.nom) + '"><img loading="lazy" src="' + esc(img(fotos(p)[0])) + '" alt="' + esc(p.nom) + '" onerror="tuileKo(this)">' + etiquette(p) + '<span class="leg">' + esc(p.nom) + '</span></button>').join('') + '</div><p><a href="creations.html">Voir toutes les créations</a></p></section>');
+  ancre.insertAdjacentHTML('beforebegin', '<section id="recentes"><h2>Quelques belles créations</h2><div class="bande">' + l.map(p => '<button type="button" class="vig" data-pid="' + esc(p.id) + '" aria-label="Voir ' + esc(p.nom) + '"><img loading="lazy" src="' + esc(img(fotos(p)[0])) + '" alt="' + esc(p.nom) + '" onerror="tuileKo(this)">' + etiquette(p) + '</button>').join('') + '</div><p><a href="creations.html">Voir toutes les créations</a></p></section>');
   document.querySelectorAll('#recentes .vig').forEach(b => { b.onclick = () => ouvrir(b.dataset.pid, false); });
 }
 
