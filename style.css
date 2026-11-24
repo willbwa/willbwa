@@ -27,7 +27,7 @@ input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);
 .chip[aria-pressed=true]{background:var(--forest);border-color:var(--forest);color:#fff}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:20px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:4px;overflow:hidden;display:flex;flex-direction:column}
-.card img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--line);display:block}
+.card img{width:100%;aspect-ratio:1;object-fit:contain;background:var(--card);display:block}.card .extrait{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;line-height:1.45}
 .card div{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
 .card h3{margin:0;font-size:18px}.card small{color:var(--soft)}.prix{font-family:var(--h);font-weight:700}
 .card .btn{margin-top:auto;padding:9px 12px;font-size:14px;text-align:center}.card .btn[disabled]{opacity:.5;cursor:not-allowed}
@@ -84,7 +84,7 @@ footer{padding:30px 20px;text-align:center;color:var(--soft);font-size:15px}
 .encart{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--oak);border-radius:4px;padding:16px 18px;margin:0 0 22px}.encart p{margin:0 0 12px}
 .bande{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .vig{position:relative;padding:0;border:0;background:none;cursor:pointer;border-radius:4px;overflow:hidden}
-.vig img{width:100%;aspect-ratio:1;object-fit:cover;display:block;background:var(--line)}
+.vig img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:var(--card)}
 .vig .leg{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font:600 13px var(--h);text-align:left}
 .cal{font-size:14px;margin:8px 0 0}
 .insp{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:10px;margin-bottom:16px;max-width:560px}.insp img{width:84px;height:84px;object-fit:cover;border-radius:4px}
