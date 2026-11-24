@@ -63,7 +63,7 @@ const vignette = (p, eager) => { const f = fotos(p); return '<button class="vign
   etiquette(p) + (f.length > 1 ? '<span class="nbph">' + f.length + ' photos</span>' : '') + '</button>'; };
 const detail = p => [p.essence, p.dimensions].filter(Boolean).map(esc).join(' · ');
 const carte = (p, anc, i) => '<article class="card' + (p.etat === 'reserve' ? ' reserve' : '') + '" data-pid="' + esc(p.id) + '">' + vignette(p, i < 4) + '<div><h3>' + esc(p.nom) + '</h3>' +
-  (detail(p) ? '<small><b>' + detail(p) + '</b></small>' : '') + (p.description ? '<small class="extrait">' + esc(String(p.description).length > 135 ? String(p.description).slice(0, 132).trimEnd() + '…' : p.description) + '</small>' : '') +
+  (detail(p) ? '<small><b>' + detail(p) + '</b></small>' : '') + (p.description ? '<small class="extrait">' + esc(p.description) + '</small>' : '') +
   (anc ? '<a class="btn" href="projet.html?creation=' + encodeURIComponent(p.nom) + '">Je veux une création personnalisée</a>'
     : '<span class="prix">' + eur(p.prix) + '</span>' + (p.disponibilite === 'sur commande' ? '<small>Sur commande</small>' : p.reste > 1 ? '<small>Il en reste ' + p.reste + '</small>' : '') +
       '<div class="actions-carte"><button class="btn" data-id="' + esc(p.id) + '"' + (p.etat === 'reserve' ? ' disabled>Déjà réservé' : p.disponibilite === 'épuisé' ? ' disabled>Épuisé' : '>Ajouter à ma sélection') + '</button><button class="btn alt" type="button" data-open="' + esc(p.id) + '">Voir la création</button></div>') + '</div></article>';
