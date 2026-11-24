@@ -34,7 +34,7 @@ const sauve = () => { try { localStorage.setItem('sel', JSON.stringify(sel)); lo
 const liens = [['index.html', 'Accueil', 'home'], ['creations.html', 'Créations', 'creations'], ['anciennes.html', 'Anciennes créations', 'anciennes'], ['projet.html', 'Personnalisation', 'projet'], ['marches.html', 'Marchés', 'marches'], ['infos.html', 'Infos pratiques', 'infos'], ['contact.html', 'Contact', 'contact']];
 document.body.insertAdjacentHTML('afterbegin', '<nav class="nav"><a class="marque" href="index.html"><img src="logo-nav.png" alt="" width="34" height="34">Willbwa</a>' +
   liens.map(l => '<a href="' + l[0] + '"' + (l[2] === page || (page === 'categorie' && l[2] === 'creations') ? ' aria-current="page"' : '') + '>' + l[1] + '</a>').join('') + '</nav>');
-document.body.insertAdjacentHTML('beforeend', `<footer><p>Par catégorie : <a href="porte-cles.html">Porte-clés</a> · <a href="decapsuleurs.html">Décapsuleurs</a> · <a href="lampes.html">Lampes</a> · <a href="bougies.html">Bougies</a></p>© Willbwa · Artisan en Belgique · <a href="${INSTA}" target="_blank" rel="noopener">Instagram</a> · <a href="infos.html#donnees">Données et confidentialité</a></footer>
+document.body.insertAdjacentHTML('beforeend', `<footer><p>Par catégorie : <a href="porte-cles.html">Porte-clés</a> · <a href="decapsuleurs.html">Décapsuleurs</a> · <a href="lampes.html">Lampes</a> · <a href="bougies.html">Bougeoirs</a></p>© Willbwa · Artisan en Belgique · <a href="${INSTA}" target="_blank" rel="noopener">Instagram</a> · <a href="infos.html#donnees">Données et confidentialité</a></footer>
 <div id="toast" role="status" hidden></div>
 <button id="fab" class="btn" hidden>Ma sélection (<span id="nb">0</span>)</button>
 <dialog id="dlg"><h2 style="font-size:26px">Ma sélection</h2><div id="lignes"></div><p><b id="total" class="prix"></b></p>
@@ -146,11 +146,11 @@ function tuileKo(img) {   // une photo qui ne charge pas : on retire sa tuile (e
   const s = document.getElementById('recentes');
   if (s && !s.querySelector('.vig')) s.remove();
 }
-function recentes() {   // bandeau de photos sur l'accueil : les 6 dernières créations disponibles
-  const l = data.catalogue.filter(p => p.etat === 'disponible' && fotos(p).length).slice().reverse().slice(0, 6), a = $('#recentes'), ancre = document.querySelector('#about');
+function recentes() {   // bandeau de l'accueil : uniquement les créations classées n° 1
+  const l = data.catalogue.filter(p => Number(p.ordre) === 1 && fotos(p).length), a = $('#recentes'), ancre = document.querySelector('#about');
   if (a) a.remove();
   if (!ancre || !l.length) return;
-  ancre.insertAdjacentHTML('beforebegin', '<section id="recentes"><h2>Dernières créations</h2><div class="bande">' + l.map(p => '<button type="button" class="vig" data-pid="' + esc(p.id) + '" aria-label="Voir ' + esc(p.nom) + '"><img loading="lazy" src="' + esc(img(fotos(p)[0])) + '" alt="' + esc(p.nom) + '" onerror="tuileKo(this)">' + etiquette(p) + '<span class="leg">' + esc(p.nom) + '</span></button>').join('') + '</div><p><a href="creations.html">Voir toutes les créations</a></p></section>');
+  ancre.insertAdjacentHTML('beforebegin', '<section id="recentes"><h2>Quelques belles créations</h2><div class="bande">' + l.map(p => '<button type="button" class="vig" data-pid="' + esc(p.id) + '" aria-label="Voir ' + esc(p.nom) + '"><img loading="lazy" src="' + esc(img(fotos(p)[0])) + '" alt="' + esc(p.nom) + '" onerror="tuileKo(this)">' + etiquette(p) + '<span class="leg">' + esc(p.nom) + '</span></button>').join('') + '</div><p><a href="creations.html">Voir toutes les créations</a></p></section>');
   document.querySelectorAll('#recentes .vig').forEach(b => { b.onclick = () => ouvrir(b.dataset.pid, false); });
 }
 
