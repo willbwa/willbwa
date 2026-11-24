@@ -36,7 +36,7 @@ input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);
 .card .vignette img{width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain}
 .card .vignette .sansphoto{height:100%;aspect-ratio:auto}
 .card .extrait{min-height:0}
-.card>div>a.btn:last-child{margin-top:auto}
+.card>div>a.btn:last-child{margin-top:auto;font-size:13px;padding:8px 6px;line-height:1.15}
 @media(max-width:600px){.card .vignette{height:220px;flex-basis:220px}}
 .entrees{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
 .entree{display:block;padding:22px;border:1px solid var(--line);border-radius:4px;background:var(--card);text-decoration:none;color:var(--ink)}
