@@ -82,9 +82,9 @@ footer{padding:30px 20px;text-align:center;color:var(--soft);font-size:15px}
 .card.reserve .vignette img{opacity:.55}
 .car{margin:8px 0 0;padding-left:18px;font-size:15px}
 .encart{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--oak);border-radius:4px;padding:16px 18px;margin:0 0 22px}.encart p{margin:0 0 12px}
-.bande{display:flex;flex-wrap:nowrap;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 2px 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}.bande .vig{flex:0 0 clamp(135px,18vw,180px);scroll-snap-align:start}.bande .vig img{background:var(--bg);mix-blend-mode:multiply}
+.bande{display:flex;flex-wrap:nowrap;align-items:flex-start;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;padding:2px 2px 10px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}.bande .vig{flex:0 0 auto;scroll-snap-align:start}
 .vig{position:relative;padding:0;border:0;background:none;cursor:pointer;border-radius:4px;overflow:hidden}
-.vig img{width:100%;aspect-ratio:1;object-fit:contain;display:block;background:var(--card)}
+.vig img{display:block;width:auto;height:180px;max-width:none;aspect-ratio:auto;object-fit:contain;background:transparent}
 .vig .leg{position:absolute;left:0;right:0;bottom:0;padding:18px 8px 6px;background:linear-gradient(transparent,rgba(0,0,0,.65));color:#fff;font:600 13px var(--h);text-align:left}
 .cal{font-size:14px;margin:8px 0 0}
 .insp{display:flex;gap:14px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:10px;margin-bottom:16px;max-width:560px}.insp img{width:84px;height:84px;object-fit:cover;border-radius:4px}
