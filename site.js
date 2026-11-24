@@ -66,7 +66,7 @@ const carte = (p, anc, i) => '<article class="card' + (p.etat === 'reserve' ? ' 
   (detail(p) ? '<small><b>' + detail(p) + '</b></small>' : '') + (p.description ? '<small class="extrait">' + esc(String(p.description).length > 135 ? String(p.description).slice(0, 132).trimEnd() + '…' : p.description) + '</small>' : '') +
   (anc ? '<a class="btn" href="projet.html?creation=' + encodeURIComponent(p.nom) + '">Je veux une création personnalisée</a>'
     : '<span class="prix">' + eur(p.prix) + '</span>' + (p.disponibilite === 'sur commande' ? '<small>Sur commande</small>' : p.reste > 1 ? '<small>Il en reste ' + p.reste + '</small>' : '') +
-      '<button class="btn" data-id="' + esc(p.id) + '"' + (p.etat === 'reserve' ? ' disabled>Déjà réservé' : p.disponibilite === 'épuisé' ? ' disabled>Épuisé' : '>Ajouter à ma sélection') + '</button>') + '</div></article>';
+      '<div class="actions-carte"><button class="btn" data-id="' + esc(p.id) + '"' + (p.etat === 'reserve' ? ' disabled>Déjà réservé' : p.disponibilite === 'épuisé' ? ' disabled>Épuisé' : '>Ajouter à ma sélection') + '</button><button class="btn alt" type="button" data-open="' + esc(p.id) + '">Voir la création</button></div>') + '</div></article>';
 
 function liste(anc) {
   const motif = document.body.dataset.cat ? new RegExp(document.body.dataset.cat) : null;   // page d'une catégorie
@@ -192,6 +192,7 @@ function branche(anc) {
   const g = $('#grille');
   g.querySelectorAll('article').forEach(a => { a.onclick = e => { if (!e.target.closest('.btn')) ouvrir(a.dataset.pid, anc); }; });
   g.querySelectorAll('.vignette img').forEach(i => { i.onerror = () => i.replaceWith(Object.assign(document.createElement('span'), { className: 'sansphoto', textContent: 'Photo indisponible' })); });
+  g.querySelectorAll('button[data-open]').forEach(b => { b.onclick = e => { e.stopPropagation(); ouvrir(b.dataset.open, false); }; });
 }
 function galeries() {
   document.querySelectorAll('.galerie a').forEach(a => {
