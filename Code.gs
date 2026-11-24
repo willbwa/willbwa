@@ -145,7 +145,8 @@ function donneesPubliques_() {
     return { id: String(r.id), nom: r.nom, categorie: r.categorie, description: r.description,
       prix: dispo === 'ancien' ? 0 : Number(r.prix) || 0,   // pas de prix pour les anciennes créations
       photo: r.photo, reste: reste, disponibilite: dispo, etat: etat,
-      essence: String(r.essence || ''), dimensions: String(r.dimensions || ''), finition: String(r.finition || '') };
+      essence: String(r.essence || ''), dimensions: String(r.dimensions || ''), finition: String(r.finition || ''),
+      ordre: Number(r.ordre) || 0 };
   });
   const marches = lire_('Marches').filter(r => oui_(r.public)).map(r => ({
     date: dateIso_(r.date), date_fin: dateIso_(r.date_fin), lieu: r.lieu, horaires: r.horaires, remarque: r.remarque,
