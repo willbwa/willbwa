@@ -150,7 +150,7 @@ function recentes() {   // bandeau de l'accueil : uniquement les créations clas
   const l = data.catalogue.filter(p => Number(p.ordre) === 1 && fotos(p).length), a = $('#recentes'), ancre = document.querySelector('#about');
   if (a) a.remove();
   if (!ancre || !l.length) return;
-  ancre.insertAdjacentHTML('beforebegin', '<section id="recentes"><h2>Quelques belles créations</h2><div class="bande">' + l.map(p => '<button type="button" class="vig" data-pid="' + esc(p.id) + '" aria-label="Voir ' + esc(p.nom) + '"><img loading="lazy" src="' + esc(img(fotos(p)[0])) + '" alt="' + esc(p.nom) + '" onerror="tuileKo(this)">' + etiquette(p) + '</button>').join('') + '</div><p><a href="creations.html">Voir toutes les créations</a></p></section>');
+  ancre.insertAdjacentHTML('beforebegin', '<section id="recentes"><h2>Quelques belles créations</h2><div class="bande">' + l.map(p => '<button type="button" class="vig" data-pid="' + esc(p.id) + '" aria-label="Voir ' + esc(p.nom) + '"><img loading="lazy" src="' + esc(img(fotos(p)[0])) + '" alt="' + esc(p.nom) + '" onerror="tuileKo(this)"></button>').join('') + '</div><p><a href="creations.html">Voir toutes les créations</a></p></section>');
   document.querySelectorAll('#recentes .vig').forEach(b => { b.onclick = () => ouvrir(b.dataset.pid, false); });
 }
 
