@@ -30,6 +30,16 @@ let data = { catalogue: [], marches: [], contact: {} }, filtre = 'Tout', sel = {
 try { sel = JSON.parse(localStorage.getItem('sel') || '{}'); com = JSON.parse(localStorage.getItem('com') || '{}'); } catch (e) {}
 const sauve = () => { try { localStorage.setItem('sel', JSON.stringify(sel)); localStorage.setItem('com', JSON.stringify(com)); } catch (e) {} };
 
+// Envoi discret des événements de fréquentation ; aucun identifiant visiteur ni donnée de formulaire.
+function suivreStatistique(evenement, article) {
+  try {
+    const corps = { type: 'statistique', evenement: evenement, page: page || 'autre' };
+    if (article) { corps.article_id = String(article.id || '').slice(0, 60); corps.article_nom = String(article.nom || '').slice(0, 120); }
+    fetch(API, { method: 'POST', body: JSON.stringify(corps), keepalive: true }).catch(() => {});
+  } catch (e) {}
+}
+suivreStatistique('visite');
+
 /* ---------- Menu, pied de page, sélection (communs à toutes les pages) ---------- */
 const liens = [['index.html', 'Accueil', 'home'], ['creations.html', 'Créations', 'creations'], ['anciennes.html', 'Anciennes créations', 'anciennes'], ['projet.html', 'Personnalisation', 'projet'], ['marches.html', 'Marchés', 'marches'], ['infos.html', 'Infos pratiques', 'infos'], ['contact.html', 'Contact', 'contact']];
 document.body.insertAdjacentHTML('afterbegin', '<nav class="nav"><a class="marque" href="index.html"><img src="logo-nav.png" alt="" width="34" height="34">Willbwa</a>' +
@@ -82,7 +92,7 @@ function liste(anc) {
   const l = src.filter(p => (filtre === 'Tout' || (filtre === 'Pièces uniques' ? p.reste === 1 : p.categorie === filtre)) && (p.nom + ' ' + p.description + ' ' + p.essence + ' ' + p.finition + ' ' + p.categorie).toLowerCase().includes(q));
   $('#grille').innerHTML = l.length ? l.map((p, i) => carte(p, anc, i)).join('') : '<p class="vide">' + (src.length ? 'Aucune création ne correspond à ta recherche.' : motif ? 'Pas de pièce disponible dans cette catégorie pour le moment. Regarde les <a href="anciennes.html">anciennes créations</a> ou <a href="contact.html">écris-moi</a> pour une création personnalisée.' : 'Les créations arrivent bientôt.') + '</p>';
   $('#grille').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => { sel[b.dataset.id] = Math.min(maxi(b.dataset.id), (sel[b.dataset.id] || 0) + 1); maj();
-    const p = data.catalogue.find(x => String(x.id) === b.dataset.id); toast('« ' + (p ? p.nom : 'Article') + ' » ajouté. Tu peux préciser ton choix dans ta sélection.'); });
+    const p = data.catalogue.find(x => String(x.id) === b.dataset.id); if (p) suivreStatistique('ajout_selection', p); toast('« ' + (p ? p.nom : 'Article') + ' » ajouté. Tu peux préciser ton choix dans ta sélection.'); });
   branche(anc);
 }
 
@@ -174,6 +184,7 @@ function montrer(i) {
 function ouvrir(id, anc) {
   const p = data.catalogue.find(x => String(x.id) === String(id)), f = p ? fotos(p) : [];
   if (!f.length) return;
+  suivreStatistique('article_consulte', p);
   const car = [['Essence', p.essence], ['Dimensions', p.dimensions], ['Finition', p.finition]].filter(x => x[1]).map(x => '<li><b>' + x[0] + ' :</b> ' + esc(x[1]) + '</li>').join('');
   const etat = p.etat === 'reserve' ? 'Cette pièce est réservée.' : p.etat === 'vendu' ? 'Cette pièce a été vendue.' : '';
   const info = esc(p.description) + (car ? '<ul class="car">' + car + '</ul>' : '') + (anc ? (etat ? '<br><b>' + etat + '</b>' : '')
@@ -184,7 +195,7 @@ function ouvrir(id, anc) {
   if ($('#v-ajout')) $('#v-ajout').onclick = () => {
     const v = $('#v-com') ? $('#v-com').value.trim() : '';
     if (v) com[id] = v;
-    sel[id] = Math.min(maxi(id), (sel[id] || 0) + 1); maj(); $('#visu').close();
+    sel[id] = Math.min(maxi(id), (sel[id] || 0) + 1); suivreStatistique('ajout_selection', p); maj(); $('#visu').close();
     toast('« ' + p.nom + ' » ajouté à ta sélection.');
   };
 }
