@@ -9,7 +9,8 @@ const ONGLETS = {
   Reservations: ['date_heure', 'client', 'email', 'telephone', 'remise', 'marche', 'adresse', 'articles', 'total', 'statut', 'note', 'ids_qte', 'stock_rendu'],
   Messages: ['date_heure', 'nom', 'email', 'message'],
   Projets: ['date_heure', 'type', 'creation', 'prenom', 'email', 'projet', 'usage', 'modification', 'description', 'dimensions', 'bois', 'budget', 'photos', 'statut'],
-  Config: ['cle', 'valeur']
+  Config: ['cle', 'valeur'],
+  Statistiques: ['date_heure', 'semaine', 'evenement', 'page', 'article_id', 'article_nom']
 };
 
 // À lancer UNE FOIS : crée les onglets
@@ -243,6 +244,7 @@ function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
     if (d.piege) return json_({ ok: true });                       // robot : on fait semblant
+    if (d.type === 'statistique') return json_(statistique_(d));
     const email = net_(d.email, 120).toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Adresse e-mail invalide.');
     const cache = CacheService.getScriptCache();
@@ -256,6 +258,22 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, erreur: err.message });
   }
+}
+
+// Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
+function statistique_(d) {
+  const evenements = ['visite', 'article_consulte', 'ajout_selection', 'reservation_recue', 'article_reserve'];
+  const pagesAutorisees = ['home', 'creations', 'categorie', 'anciennes', 'projet', 'marches', 'contact', 'infos'];
+  const evenement = String(d.evenement || '');
+  if (evenements.indexOf(evenement) < 0) return { ok: true };
+  const page = String(d.page || '').slice(0, 30);
+  const id = ['article_consulte', 'ajout_selection', 'article_reserve'].indexOf(evenement) >= 0 ? net_(d.article_id, 60) : '';
+  const nom = id ? net_(d.article_nom, 120) : '';
+  const date = new Date();
+  const semaine = Utilities.formatDate(date, FUSEAU, "YYYY-'S'ww");
+  ajouter_('Statistiques', { date_heure: date, semaine: semaine, evenement: evenement,
+    page: pagesAutorisees.indexOf(page) >= 0 ? page : 'autre', article_id: id, article_nom: nom });
+  return { ok: true };
 }
 
 function contact_(d, email) {
@@ -291,6 +309,8 @@ function reservation_(d, email) {
     telephone: net_(d.telephone, 30), remise: LIB[remise], marche: marche, adresse: adresse,
     articles: txt, total: total, statut: 'nouvelle', note: net_(d.note, 500),
     ids_qte: lignes.map(l => l.id + ':' + l.q).join(';'), stock_rendu: '' });
+  statistique_({ evenement: 'reservation_recue', page: 'reservation' });
+  lignes.forEach(l => statistique_({ evenement: 'article_reserve', page: 'reservation', article_id: l.id, article_nom: l.nom }));
   lignes.forEach(l => retirerStock_(l.id, l.q));   // la pièce est mise de côté pour ce client
   cacheVider_();
   const resume = txt + '\nTotal articles : ' + total.toFixed(2) + ' €';
