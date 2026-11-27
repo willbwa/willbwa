@@ -262,6 +262,8 @@ function doPost(e) {
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
 function statistique_(d) {
+  // Le suivi ne doit jamais bloquer une réservation si l'onglet n'est pas encore créé.
+  if (!SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Statistiques')) return { ok: true };
   const evenements = ['visite', 'article_consulte', 'ajout_selection', 'reservation_recue', 'article_reserve'];
   const pagesAutorisees = ['home', 'creations', 'categorie', 'anciennes', 'projet', 'marches', 'contact', 'infos'];
   const evenement = String(d.evenement || '');
@@ -309,8 +311,10 @@ function reservation_(d, email) {
     telephone: net_(d.telephone, 30), remise: LIB[remise], marche: marche, adresse: adresse,
     articles: txt, total: total, statut: 'nouvelle', note: net_(d.note, 500),
     ids_qte: lignes.map(l => l.id + ':' + l.q).join(';'), stock_rendu: '' });
-  statistique_({ evenement: 'reservation_recue', page: 'reservation' });
-  lignes.forEach(l => statistique_({ evenement: 'article_reserve', page: 'reservation', article_id: l.id, article_nom: l.nom }));
+  try {
+    statistique_({ evenement: 'reservation_recue', page: 'reservation' });
+    lignes.forEach(l => statistique_({ evenement: 'article_reserve', page: 'reservation', article_id: l.id, article_nom: l.nom }));
+  } catch (err) { console.error('Statistiques non enregistrées : ' + err.message); }
   lignes.forEach(l => retirerStock_(l.id, l.q));   // la pièce est mise de côté pour ce client
   cacheVider_();
   const resume = txt + '\nTotal articles : ' + total.toFixed(2) + ' €';
