@@ -69,7 +69,7 @@ document.body.insertAdjacentHTML('beforeend', `<footer><p>Par catégorie : <a hr
 /* ---------- Affichage ---------- */
 const etiquette = p => p.etat === 'reserve' ? '<span class="badge res">Réservé</span>' : p.etat === 'vendu' ? '<span class="badge ven">Vendu</span>' : p.reste === 1 ? '<span class="badge uni">Pièce unique</span>' : '';
 const vignette = (p, eager) => { const f = fotos(p); return '<button class="vignette" type="button" aria-label="Voir les photos de ' + esc(p.nom) + '">' +
-  (f.length ? '<img ' + (eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async" src="' + esc(img(f[0])) + '" alt="' + esc(p.nom) + '">' : '<span class="sansphoto">Photo à venir</span>') +
+  (f.length ? '<img ' + (eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async" src="' + esc(img(f[0])) + '" alt="' + esc(p.nom) + '" onerror="photoCatalogueKo(this)">' : '<span class="sansphoto">Photo à venir</span>') +
   etiquette(p) + (f.length > 1 ? '<span class="nbph">' + f.length + ' photos</span>' : '') + '</button>'; };
 const detail = p => [p.essence, p.dimensions].filter(Boolean).map(esc).join(' · ');
 const carte = (p, anc, i) => '<article class="card' + (p.etat === 'reserve' ? ' reserve' : '') + '" data-pid="' + esc(p.id) + '">' + vignette(p, i < 4) + '<div><h3>' + esc(p.nom) + '</h3>' +
@@ -151,6 +151,7 @@ const pages = {
   }
 };
 
+function photoCatalogueKo(img) { const s = document.createElement('span'); s.className = 'sansphoto'; s.textContent = 'Photo indisponible'; img.replaceWith(s); }
 function tuileKo(img) {   // une photo qui ne charge pas : on retire sa tuile (et le bandeau s'il ne reste rien)
   img.parentNode.remove();
   const s = document.getElementById('recentes');
