@@ -439,7 +439,7 @@ function adminCreer_(d) {
     Depenses: ['date', 'description', 'notes', 'montant', 'mode_paiement', 'source', 'fournisseur'],
     Ventes: ['date', 'creation', 'quantite', 'prix_unitaire', 'lieu', 'mode_paiement', 'note'],
     Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note'],
-    Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
+    Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'quantite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
     Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin']
   };
   const nom = String(d.feuille || ''), entetes = schemas[nom];
