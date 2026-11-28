@@ -788,7 +788,7 @@ function nettoyerDonnees() {
     for (let i = v.length - 1; i >= 1; i--) {                        // de bas en haut : supprimer une ligne ne décale pas les suivantes
       const date = v[i][di];
       if (!(date instanceof Date)) continue;
-      const final = si < 0 ? true : estFinal(String(v[i][si]).trim().toLowerCase());
+      const final = si < 0 ? supprimerLigne : estFinal(String(v[i][si]).trim().toLowerCase()); // sans statut, ne jamais anonymiser une demande encore potentiellement active
       if (!(date < s2 || (final && date < s1))) continue;            // pas encore l'heure
       if (supprimerLigne) { f.deleteRow(i + 1); c++; continue; }
       if (String(v[i][h.indexOf(perso[0])]) === '(supprimé)') continue;   // déjà fait
