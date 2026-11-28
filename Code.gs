@@ -329,7 +329,7 @@ function adminCreer_(d) {
     let v = d.champs[cle];
     if (v === null || v === undefined) v = '';
     if (typeof v === 'object') throw new Error('Valeur invalide pour ' + cle);
-    if (['montant', 'quantite', 'prix_unitaire'].indexOf(cle) >= 0) {
+    if (['montant', 'quantite', 'prix_unitaire', 'prix', 'ordre'].indexOf(cle) >= 0) {
       if (v === '') { if (cle === 'montant') throw new Error('Le montant est obligatoire.'); }
       else { v = Number(v); if (!isFinite(v) || v < 0 || (cle === 'quantite' && !Number.isInteger(v))) throw new Error('Valeur numérique invalide : ' + cle); }
     } else {
@@ -338,6 +338,9 @@ function adminCreer_(d) {
     valeurs[cle] = v;
   });
   if (!valeurs.date) valeurs.date = Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
+  if (nom === 'Catalogue' && !valeurs.id) valeurs.id = Utilities.getUuid();
+  if (nom === 'Catalogue' && !valeurs.nom) throw new Error('Le nom de la création est obligatoire.');
+  if (nom === 'Marches' && !valeurs.lieu) throw new Error('Le lieu du marché est obligatoire.');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let f = ss.getSheetByName(nom);
   if (!f) { f = ss.insertSheet(nom); f.getRange(1, 1, 1, entetes.length).setValues([entetes]).setFontWeight('bold'); f.setFrozenRows(1); }
