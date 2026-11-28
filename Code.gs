@@ -288,7 +288,10 @@ function doPost(e) {
     cache.put(cle, '1', 120);
     const verrou = LockService.getScriptLock(); verrou.waitLock(15000);
     try {
-      return json_(d.type === 'contact' ? contact_(d, email) : d.type === 'projet' ? projet_(d, email) : reservation_(d, email));
+      if (d.type === 'contact') return json_(contact_(d, email));
+      if (d.type === 'projet') return json_(projet_(d, email));
+      if (d.type === 'reservation') return json_(reservation_(d, email));
+      throw new Error('Type de demande inconnu.');
     } finally { verrou.releaseLock(); }
   } catch (err) {
     return json_({ ok: false, erreur: err.message });
