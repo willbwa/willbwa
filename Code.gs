@@ -249,6 +249,7 @@ function doPost(e) {
       exigerAccesPrive_(d);
       if (d.type === 'admin_lire') return json_(adminLire_());
       if (d.type === 'admin_modifier') return json_(adminModifier_(d));
+      if (d.type === 'admin_creer') return json_(adminCreer_(d));
       throw new Error('Action privée inconnue.');
     }
     if (d.type === 'statistique') return json_(statistique_(d));
@@ -306,6 +307,41 @@ function adminModifier_(d) {
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
   cacheVider_();
   return { ok: true, feuille: nom, ligne: ligne };
+}
+
+/* ---------- Création d'entrées financières authentifiées ---------- */
+function adminCreer_(d) {
+  const schemas = {
+    Depenses: ['date', 'description', 'notes', 'montant', 'mode_paiement', 'source', 'fournisseur'],
+    Ventes: ['date', 'creation', 'quantite', 'prix_unitaire', 'lieu', 'mode_paiement', 'note'],
+    Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note']
+  };
+  const nom = String(d.feuille || ''), entetes = schemas[nom];
+  if (!entetes) throw new Error('Création non autorisée pour cette feuille.');
+  if (!d.champs || typeof d.champs !== 'object' || Array.isArray(d.champs)) throw new Error('Données invalides.');
+  const valeurs = {};
+  entetes.forEach(function (cle) {
+    let v = d.champs[cle];
+    if (v === null || v === undefined) v = '';
+    if (typeof v === 'object') throw new Error('Valeur invalide pour ' + cle);
+    if (['montant', 'quantite', 'prix_unitaire'].indexOf(cle) >= 0) {
+      if (v === '') { if (cle === 'montant') throw new Error('Le montant est obligatoire.'); }
+      else { v = Number(v); if (!isFinite(v) || v < 0 || (cle === 'quantite' && !Number.isInteger(v))) throw new Error('Valeur numérique invalide : ' + cle); }
+    } else {
+      v = net_(v, cle === 'notes' || cle === 'note' || cle === 'description' ? 3000 : 500);
+    }
+    valeurs[cle] = v;
+  });
+  if (!valeurs.date) valeurs.date = Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let f = ss.getSheetByName(nom);
+  if (!f) { f = ss.insertSheet(nom); f.getRange(1, 1, 1, entetes.length).setValues([entetes]).setFontWeight('bold'); f.setFrozenRows(1); }
+  const existants = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0].map(String);
+  if (entetes.some(function (cle) { return existants.indexOf(cle) < 0; })) throw new Error('Les en-têtes de la feuille ' + nom + ' doivent être vérifiés avant toute écriture.');
+  const id = Utilities.getUuid();
+  if (existants.indexOf('id') >= 0) valeurs.id = id;
+  f.appendRow(existants.map(function (cle) { return valeurs[cle] === undefined ? '' : valeurs[cle]; }));
+  return { ok: true, feuille: nom, id: id };
 }
 
 /* ---------- Espace privé : lecture authentifiée ---------- */
