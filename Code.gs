@@ -358,7 +358,7 @@ function doPost(e) {
 }
 
 /* ---------- Espace privé : modifications authentifiées ---------- */
-// Modification d'une ligne existante uniquement; aucune écriture dans Config ni dans les colonnes de stock.
+// Modification d'une ligne existante uniquement; aucune écriture dans Config ni dans les autres colonnes de stock.
 function adminModifier_(d) {
   const autorise = {
     Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'quantite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
