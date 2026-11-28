@@ -281,8 +281,10 @@ async function envoyer(form, corps, msg, apres) {
     if (!r.ok) throw new Error(r.erreur || 'Erreur');
     m.className = r.emailsOk === false ? 'msg err' : 'msg ok';
     m.textContent = r.emailsOk === false
-      ? 'Ta demande est bien enregistrée, mais un e-mail n’a pas pu être envoyé. Tu peux vérifier avec Willbwa directement.'
-      : 'Merci, c’est envoyé ! Tu reçois une confirmation par e-mail.';
+      ? 'Ton message ou ta demande est bien enregistré(e), mais un e-mail n’a pas pu être envoyé. Tu peux vérifier avec Willbwa directement.'
+      : corps.type === 'contact'
+        ? 'Merci, ton message a bien été envoyé !'
+        : 'Merci, c’est envoyé ! Tu reçois une confirmation par e-mail.';
     apres && apres(); form.reset();
   } catch (e) {
     const mail = data.contact && data.contact.email;
