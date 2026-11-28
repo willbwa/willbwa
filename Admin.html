@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base target="_top">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    :root{color-scheme:light;--ink:#392718;--paper:#fbf6ed;--cream:#f1e4ce;--gold:#b7833e;--line:#dfd0b8}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
+    header{background:#4a3320;color:#fff4e3;padding:22px max(20px,calc((100% - 1120px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px}
+    header h1{font-size:24px;margin:0}header p{margin:2px 0 0;color:#e3d3b9;font-size:14px}
+    main{max-width:1120px;margin:28px auto;padding:0 18px}.panel{background:white;border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 4px 16px #3927180a}
+    .hidden{display:none!important}.muted{color:#766653}.error{color:#9a3025}.success{color:#27613e}
+    button,input,select,textarea{font:inherit}button{border:0;border-radius:9px;padding:10px 15px;background:var(--gold);color:#fff;font-weight:650;cursor:pointer}button.secondary{background:var(--cream);color:var(--ink)}button:disabled{opacity:.55;cursor:wait}
+    nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}nav button{background:#e8d9c1;color:var(--ink)}nav button.active{background:#4a3320;color:white}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:14px;font-weight:650}.field input,.field select,.field textarea{width:100%;border:1px solid #cdbb9e;border-radius:8px;padding:10px;background:#fffdf9;color:var(--ink)}.field textarea{min-height:80px}
+    .tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{text-align:left;padding:10px;border-bottom:1px solid #eee3d2;vertical-align:top}th{background:#f8f0e2;white-space:nowrap}
+    .sectionhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.sectionhead h2{margin:0;font-size:21px}
+    #googleBtn{margin-top:12px}#status{min-height:24px;margin:12px 0}
+    @media(max-width:600px){header{align-items:flex-start;flex-direction:column}main{margin:16px auto}.panel{padding:16px}}
+  </style>
+</head>
+<body>
+<header><div><h1>Willbwa · Espace privé</h1><p>Gestion des créations et de l’activité</p></div><button id="logout" class="secondary hidden">Se déconnecter</button></header>
+<main>
+  <section id="login" class="panel">
+    <h2>Connexion sécurisée</h2><p class="muted">Connecte-toi avec l’un des comptes Google autorisés.</p>
+    <div id="googleBtn"></div><p id="status" role="status"></p>
+  </section>
+  <section id="app" class="hidden">
+    <nav id="nav"></nav>
+    <div id="content"></div>
+  </section>
+</main>
+<script>
+  let idToken='', active='Résumé', cache={};
+  const $=id=>document.getElementById(id);
+  const tabs=['Résumé','Catalogue','Marchés','Réservations','Messages','Projets','Dépenses','Ventes','Mouvements','Statistiques'];
+  const headers={Catalogue:['id','nom','categorie','prix','disponibilite','visible'],Marches:['date','lieu','horaires','public'],Reservations:['date_heure','client','articles','total','statut','remise'],Messages:['date_heure','nom','email','message'],Projets:['date_heure','type','creation','prenom','email','projet','statut'],Depenses:['date','description','montant','mode_paiement','source','fournisseur'],Ventes:['date','creation','quantite','prix_unitaire','lieu','mode_paiement'],Mouvements:['date','type','montant','de','vers','note'],Statistiques:['date_heure','evenement','page','article_nom']};
+  function status(t,kind=''){ $('status').className=kind; $('status').textContent=t; }
+  function call(action,payload={}){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))).adminApi(idToken,action,payload));}
+  function boot(){google.script.run.withSuccessHandler(cfg=>{if(!cfg||!cfg.clientId){status('La connexion privée doit être configurée dans Apps Script.','error');return;}google.accounts.id.initialize({client_id:cfg.clientId,callback:res=>{idToken=res.credential;load();}});google.accounts.id.renderButton($('googleBtn'),{theme:'outline',size:'large',text:'signin_with',shape:'pill',locale:'fr'});}).withFailureHandler(e=>status(e.message||String(e),'error')).adminBootstrap();}
+  function showApp(){ $('login').classList.add('hidden');$('app').classList.remove('hidden');$('logout').classList.remove('hidden'); }
+  function logout(){idToken='';cache={};$('app').classList.add('hidden');$('login').classList.remove('hidden');$('logout').classList.add('hidden');status('Déconnecté.');$('googleBtn').replaceChildren();boot();}
+  $('logout').addEventListener('click',logout);
+  async function load(){status('Vérification du compte…');try{const r=await call('admin_lire');if(!r.ok)throw Error(r.erreur||'Lecture impossible');cache=r.donnees||{};showApp();renderNav();render();status('Connecté.','success');}catch(e){idToken='';status(e.message,'error');}}
+  function renderNav(){const n=$('nav');n.replaceChildren();tabs.forEach(t=>{const b=document.createElement('button');b.textContent=t;b.className=t===active?'active':'';b.onclick=()=>{active=t;renderNav();render();};n.appendChild(b);});}
+  function el(tag,text,cls){const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(cls)x.className=cls;return x;}
+  function render(){const c=$('content');c.replaceChildren();if(active==='Résumé'){summary(c);return;}if(['Dépenses','Ventes','Mouvements'].includes(active)){finance(c);return;}const sheet=active==='Catalogue'?'Catalogue':active==='Marchés'?'Marches':active==='Réservations'?'Reservations':active==='Messages'?'Messages':active==='Projets'?'Projets':'Statistiques';table(c,sheet);}
+  function summary(c){const box=el('section',undefined,'panel');box.appendChild(el('h2','Vue d’ensemble'));const g=el('div',undefined,'grid');const cards=[['Créations',cache.Catalogue?.length||0],['Réservations',cache.Reservations?.length||0],['Messages',cache.Messages?.length||0],['Projets personnalisés',cache.Projets?.length||0]];cards.forEach(([label,val])=>{const p=el('div',undefined,'panel');p.appendChild(el('div',label,'muted'));p.appendChild(el('h2',String(val)));g.appendChild(p);});box.appendChild(g);box.appendChild(el('p','Les données affichées sont lues depuis le classeur connecté. Les actions financières sont enregistrées séparément.','muted'));c.appendChild(box);}
+  function table(c,sheet){const box=el('section',undefined,'panel'),head=el('div',undefined,'sectionhead');head.appendChild(el('h2',active));const refresh=el('button','Actualiser');refresh.onclick=async()=>{try{const r=await call('admin_lire');cache=r.donnees||{};render();}catch(e){status(e.message,'error');}};head.appendChild(refresh);box.appendChild(head);const rows=cache[sheet]||[],cols=headers[sheet]||[];if(!rows.length)box.appendChild(el('p','Aucune donnée pour le moment.','muted'));else{const wrap=el('div',undefined,'tablewrap'),t=el('table'),thead=el('thead'),tr=el('tr');cols.forEach(k=>tr.appendChild(el('th',k)));thead.appendChild(tr);t.appendChild(thead);const body=el('tbody');rows.slice().reverse().forEach(row=>{const tr=el('tr');cols.forEach(k=>tr.appendChild(el('td',row[k]===undefined?'':String(row[k]))));body.appendChild(tr);});t.appendChild(body);wrap.appendChild(t);box.appendChild(wrap);}c.appendChild(box);}
+  function field(form,label,name,type='text',opts){const wrap=el('div',undefined,'field'),lab=el('label',label);lab.htmlFor=name;wrap.appendChild(lab);let input;if(opts){input=document.createElement('select');opts.forEach(o=>{const op=el('option',o);op.value=o;input.appendChild(op);});}else input=document.createElement(type==='textarea'?'textarea':'input');input.id=name;input.name=name;if(type!=='textarea'&&!opts)input.type=type;wrap.appendChild(input);form.appendChild(wrap);return input;}
+  function finance(c){const box=el('section',undefined,'panel'),h=el('div',undefined,'sectionhead');h.appendChild(el('h2','Nouvelle entrée · '+active));box.appendChild(h);const form=el('form');form.className='grid';const date=field(form,'Date','date','date');date.value=new Date().toISOString().slice(0,10);
+    const sheet=active==='Dépenses'?'Depenses':active==='Ventes'?'Ventes':'Mouvements';
+    let inputs={};if(sheet==='Depenses'){inputs.description=field(form,'Description','description');inputs.notes=field(form,'Notes (facultatif)','notes','textarea');inputs.montant=field(form,'Montant (€)','montant','number');inputs.mode_paiement=field(form,'Portefeuille','mode_paiement',null,['liquide','banque']);inputs.source=field(form,'Source','source');inputs.fournisseur=field(form,'Fournisseur (facultatif)','fournisseur');}
+    if(sheet==='Ventes'){inputs.creation=field(form,'Création vendue','creation');inputs.quantite=field(form,'Quantité','quantite','number');inputs.prix_unitaire=field(form,'Prix unitaire (€)','prix_unitaire','number');inputs.lieu=field(form,'Lieu / marché','lieu');inputs.mode_paiement=field(form,'Portefeuille reçu','mode_paiement',null,['liquide','banque']);inputs.note=field(form,'Note','note','textarea');}
+    if(sheet==='Mouvements'){inputs.type=field(form,'Type de mouvement','type',null,['transfert']);inputs.montant=field(form,'Montant (€)','montant','number');inputs.de=field(form,'De','de',null,['liquide','banque']);inputs.vers=field(form,'Vers','vers',null,['banque','liquide']);inputs.note=field(form,'Note','note');}
+    form.prepend(date);const submit=el('button','Enregistrer');submit.type='submit';form.appendChild(submit);form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{const champs={date:date.value};Object.entries(inputs).forEach(([k,v])=>champs[k]=v.value.trim());const r=await call('admin_creer',{feuille:sheet,champs});if(!r.ok)throw Error(r.erreur||'Échec de l’enregistrement');status('Enregistré.','success');const data=await call('admin_lire');cache=data.donnees||{};render();form.reset();}catch(err){status(err.message,'error');}finally{submit.disabled=false;}});box.appendChild(form);c.appendChild(box);table(c,sheet);}
+  boot();
+</script>
+</body>
+</html>
