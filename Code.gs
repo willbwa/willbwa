@@ -311,18 +311,19 @@ function doPost(e) {
       throw new Error('Action privée inconnue.');
     }
     if (d.type === 'statistique') return json_(statistique_(d));
+    // Refuser les types inconnus avant de consommer le quota anti-spam.
+    if (['contact', 'projet', 'reservation'].indexOf(d.type) < 0) throw new Error('Type de demande inconnu.');
     const email = net_(d.email, 120).toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Adresse e-mail invalide.');
-    const cache = CacheService.getScriptCache();
-    const cle = 'rl_' + email;
-    if (cache.get(cle)) throw new Error('Une demande vient d’être envoyée. Réessaie dans quelques minutes.');
-    cache.put(cle, '1', 120);
     const verrou = LockService.getScriptLock(); verrou.waitLock(15000);
     try {
+      // Vérifier et poser la limite sous le même verrou pour éviter deux envois simultanés.
+      const cache = CacheService.getScriptCache(), cle = 'rl_' + email;
+      if (cache.get(cle)) throw new Error('Une demande vient d’être envoyée. Réessaie dans quelques minutes.');
+      cache.put(cle, '1', 120);
       if (d.type === 'contact') return json_(contact_(d, email));
       if (d.type === 'projet') return json_(projet_(d, email));
-      if (d.type === 'reservation') return json_(reservation_(d, email));
-      throw new Error('Type de demande inconnu.');
+      return json_(reservation_(d, email));
     } finally { verrou.releaseLock(); }
   } catch (err) {
     return json_({ ok: false, erreur: err.message });
