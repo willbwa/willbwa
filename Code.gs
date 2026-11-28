@@ -364,6 +364,7 @@ function adminCreer_(d) {
   const id = Utilities.getUuid();
   if (existants.indexOf('id') >= 0) valeurs.id = id;
   f.appendRow(existants.map(function (cle) { return valeurs[cle] === undefined ? '' : valeurs[cle]; }));
+  cacheVider_(); // les créations et marchés publiés doivent apparaître sans attendre l'expiration du cache
   return { ok: true, feuille: nom, id: id };
 }
 
