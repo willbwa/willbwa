@@ -312,6 +312,12 @@ function adminModifier_(d) {
     changements.push({ colonne: entetes.indexOf(cle) + 1, valeur: valeur });
   });
   if (!changements.length) throw new Error('Aucune modification reçue.');
+  if (nom === 'Mouvements') {
+    const actuel = f.getRange(ligne, 1, 1, entetes.length).getValues()[0], fusion = {};
+    entetes.forEach(function (cle, i) { fusion[cle] = actuel[i]; });
+    changements.forEach(function (c) { fusion[entetes[c.colonne - 1]] = c.valeur; });
+    if (!(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.de)) < 0 || ['liquide','banque'].indexOf(String(fusion.vers)) < 0 || fusion.de === fusion.vers) throw new Error('Un transfert doit avoir un montant positif et deux portefeuilles différents.');
+  }
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
   cacheVider_();
   return { ok: true, feuille: nom, ligne: ligne };
