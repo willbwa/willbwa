@@ -312,11 +312,13 @@ function adminModifier_(d) {
     changements.push({ colonne: entetes.indexOf(cle) + 1, valeur: valeur });
   });
   if (!changements.length) throw new Error('Aucune modification reçue.');
-  if (nom === 'Mouvements') {
+  if (['Mouvements', 'Ventes', 'Depenses'].indexOf(nom) >= 0) {
     const actuel = f.getRange(ligne, 1, 1, entetes.length).getValues()[0], fusion = {};
     entetes.forEach(function (cle, i) { fusion[cle] = actuel[i]; });
     changements.forEach(function (c) { fusion[entetes[c.colonne - 1]] = c.valeur; });
-    if (!(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.de)) < 0 || ['liquide','banque'].indexOf(String(fusion.vers)) < 0 || fusion.de === fusion.vers) throw new Error('Un transfert doit avoir un montant positif et deux portefeuilles différents.');
+    if (nom === 'Mouvements' && (!(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.de)) < 0 || ['liquide','banque'].indexOf(String(fusion.vers)) < 0 || fusion.de === fusion.vers)) throw new Error('Un transfert doit avoir un montant positif et deux portefeuilles différents.');
+    if (nom === 'Ventes' && (!String(fusion.creation || '').trim() || !(Number(fusion.quantite) > 0) || !Number.isInteger(Number(fusion.quantite)) || !(Number(fusion.prix_unitaire) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une vente doit conserver une création, une quantité entière, un prix positif et un portefeuille valide.');
+    if (nom === 'Depenses' && (!String(fusion.description || '').trim() || !(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une dépense doit conserver une description, un montant positif et un portefeuille valide.');
   }
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
   cacheVider_();
