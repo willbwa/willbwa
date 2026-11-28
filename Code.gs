@@ -556,6 +556,16 @@ function reservation_(d, email) {
     if (reste !== null && q > reste) throw new Error(reste === 0 ? '« ' + p.nom + ' » n’est plus disponible.' : 'Il ne reste que ' + reste + ' × « ' + p.nom + ' ».');
     return { id: String(p.id), nom: p.nom, q: q, prix: Number(p.prix) || 0, com: net_(a.commentaire, 200) };
   });
+  // Une même création peut apparaître plusieurs fois dans la sélection : vérifier le cumul,
+  // sinon plusieurs lignes distinctes pourraient dépasser ensemble le stock disponible.
+  const quantitesParId = {};
+  lignes.forEach(l => { quantitesParId[l.id] = (quantitesParId[l.id] || 0) + l.q; });
+  Object.keys(quantitesParId).forEach(id => {
+    const p = cat[id], reste = reste_(p), demande = quantitesParId[id];
+    if (reste !== null && demande > reste) {
+      throw new Error(reste === 0 ? '« ' + p.nom + ' » n’est plus disponible.' : 'Il ne reste que ' + reste + ' × « ' + p.nom + ' » au total dans ta sélection.');
+    }
+  });
   if (!lignes.length) throw new Error('Ta sélection est vide.');       // le prix vient du Sheet, jamais du navigateur
   const total = lignes.reduce((s, l) => s + l.q * l.prix, 0);
   const txt = lignes.map(l => l.q + ' × ' + l.nom + ' (' + (l.q * l.prix).toFixed(2) + ' €)' + (l.com ? ' — précision : ' + l.com : '')).join('\n');
