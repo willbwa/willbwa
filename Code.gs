@@ -93,6 +93,14 @@ function dateIso_(v) {
   return i >= 0 ? m[3] + '-' + ('0' + (i + 1)).slice(-2) + '-' + ('0' + m[1]).slice(-2) : '';
 }
 function dateTxt_(d) { return dateIso_(d); }
+// Valide une date civile ISO sans accepter les dates impossibles (ex. 2026-02-31).
+function dateValide_(v) {
+  const t = String(v == null ? '' : v).trim();
+  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  if (!m) return false;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() + 1 === Number(m[2]) && d.getUTCDate() === Number(m[3]);
+}
 
 /* ---------- Lecture publique : uniquement catalogue, marchés, infos de contact ---------- */
 const oui_ = v => String(v).trim().toLowerCase() === 'oui';
@@ -298,6 +306,7 @@ function adminModifier_(d) {
     let valeur = d.champs[cle];
     if (valeur === null || valeur === undefined) valeur = '';
     if (typeof valeur === 'object') throw new Error('Valeur invalide pour ' + cle);
+    if ((cle === 'date' || cle === 'date_fin') && valeur !== '' && !dateValide_(valeur)) throw new Error('Date invalide pour ' + cle + ' : utilise le format AAAA-MM-JJ.');
     if (['prix', 'montant', 'quantite', 'prix_unitaire', 'ordre', 'cout_fabrication'].indexOf(cle) >= 0 && valeur !== '') {
       valeur = Number(valeur);
       if (!isFinite(valeur) || valeur < 0) throw new Error('Valeur numérique invalide pour ' + cle);
@@ -317,7 +326,7 @@ function adminModifier_(d) {
     entetes.forEach(function (cle, i) { fusion[cle] = actuel[i]; });
     changements.forEach(function (c) { fusion[entetes[c.colonne - 1]] = c.valeur; });
     if (nom === 'Mouvements' && (String(fusion.type) !== 'transfert' || !(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.de)) < 0 || ['liquide','banque'].indexOf(String(fusion.vers)) < 0 || fusion.de === fusion.vers)) throw new Error('Un transfert doit avoir un montant positif et deux portefeuilles différents.');
-    if (nom === 'Ventes' && (!String(fusion.creation || '').trim() || !(Number(fusion.quantite) > 0) || !Number.isInteger(Number(fusion.quantite)) || !(Number(fusion.prix_unitaire) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une vente doit conserver une création, une quantité entière, un prix positif et un portefeuille valide.');
+    if (nom === 'Ventes' && (!String(fusion.creation || '').trim() || (Object.prototype.hasOwnProperty.call(d.champs, 'creation') && !lire_('Catalogue').some(function (p) { return String(p.nom || '').trim() === String(fusion.creation).trim(); })) || !(Number(fusion.quantite) > 0) || !Number.isInteger(Number(fusion.quantite)) || !(Number(fusion.prix_unitaire) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une vente doit conserver une création existante, une quantité entière, un prix positif et un portefeuille valide.');
     if (nom === 'Depenses' && (!String(fusion.description || '').trim() || !(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une dépense doit conserver une description, un montant positif et un portefeuille valide.');
   }
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
@@ -342,6 +351,7 @@ function adminCreer_(d) {
     let v = d.champs[cle];
     if (v === null || v === undefined) v = '';
     if (typeof v === 'object') throw new Error('Valeur invalide pour ' + cle);
+    if ((cle === 'date' || cle === 'date_fin') && v !== '' && !dateValide_(v)) throw new Error('Date invalide pour ' + cle + ' : utilise le format AAAA-MM-JJ.');
     if (['montant', 'quantite', 'prix_unitaire', 'prix', 'ordre', 'cout_fabrication'].indexOf(cle) >= 0) {
       if (v === '') { if (cle === 'montant') throw new Error('Le montant est obligatoire.'); }
       else { v = Number(v); if (!isFinite(v) || v < 0 || (cle === 'quantite' && !Number.isInteger(v))) throw new Error('Valeur numérique invalide : ' + cle); }
@@ -353,7 +363,7 @@ function adminCreer_(d) {
   if (!valeurs.date) valeurs.date = Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
   if (['Depenses', 'Ventes'].indexOf(nom) >= 0 && ['liquide', 'banque'].indexOf(String(valeurs.mode_paiement || '')) < 0) throw new Error('Choisis liquide ou banque pour le portefeuille.');
   if (nom === 'Depenses' && (!valeurs.description || !(Number(valeurs.montant) > 0))) throw new Error('La dépense doit avoir une description et un montant supérieur à zéro.');
-  if (nom === 'Ventes' && (!valeurs.creation || !(Number(valeurs.quantite) > 0) || !Number.isInteger(Number(valeurs.quantite)) || !(Number(valeurs.prix_unitaire) > 0))) throw new Error('Choisis une création, une quantité entière et un prix unitaire supérieur à zéro.');
+  if (nom === 'Ventes' && (!valeurs.creation || !lire_('Catalogue').some(function (p) { return String(p.nom || '').trim() === String(valeurs.creation).trim(); }) || !(Number(valeurs.quantite) > 0) || !Number.isInteger(Number(valeurs.quantite)) || !(Number(valeurs.prix_unitaire) > 0))) throw new Error('Choisis une création existante dans le catalogue, une quantité entière et un prix unitaire supérieur à zéro.');
   if (nom === 'Mouvements' && (String(valeurs.type || '') !== 'transfert' || ['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
   if (nom === 'Catalogue' && !valeurs.id) valeurs.id = Utilities.getUuid();
   if (nom === 'Catalogue' && !valeurs.nom) throw new Error('Le nom de la création est obligatoire.');
