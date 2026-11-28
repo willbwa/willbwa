@@ -4,7 +4,7 @@ const SITE_URL = 'https://willbwa.github.io/willbwa/';
 const INSTA_URL = 'https://www.instagram.com/artisan_willbwa/';
 
 const ONGLETS = {
-  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'quantite', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
+  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'quantite', 'visible', 'quantite', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
   Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
   Reservations: ['date_heure', 'client', 'email', 'telephone', 'remise', 'marche', 'adresse', 'articles', 'total', 'statut', 'note', 'ids_qte', 'stock_rendu'],
   Messages: ['date_heure', 'nom', 'email', 'message'],
@@ -361,7 +361,7 @@ function doPost(e) {
 // Modification d'une ligne existante uniquement; aucune écriture dans Config ni dans les colonnes de stock.
 function adminModifier_(d) {
   const autorise = {
-    Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
+    Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'quantite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
     Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
     Reservations: ['statut', 'note', 'remise', 'marche', 'adresse'],
     Projets: ['statut', 'creation', 'usage', 'modification', 'description', 'dimensions', 'bois', 'budget'],
@@ -399,6 +399,12 @@ function adminModifier_(d) {
     }
     changements.push({ colonne: entetes.indexOf(cle) + 1, valeur: valeur });
   });
+  if (nom === 'Catalogue' && (d.champs.quantite !== undefined || d.champs.disponibilite !== undefined)) {
+    const actuel = f.getRange(ligne, 1, 1, entetes.length).getValues()[0], fusion = {};
+    entetes.forEach(function (cle, i) { fusion[cle] = actuel[i]; });
+    changements.forEach(function (c) { fusion[entetes[c.colonne - 1]] = c.valeur; });
+    if (String(fusion.disponibilite || '') === 'en stock' && (fusion.quantite === '' || fusion.quantite === null || fusion.quantite === undefined)) throw new Error('Indique la quantité en stock (0 si aucun exemplaire n’est disponible).');
+  }
   if (!changements.length) throw new Error('Aucune modification reçue.');
   if (nom === 'Catalogue' && d.champs.nom !== undefined && !String(d.champs.nom).trim()) throw new Error('Le nom de la création est obligatoire.');
   if (nom === 'Marches' && ((d.champs.lieu !== undefined && !String(d.champs.lieu).trim()) || (d.champs.date !== undefined && !dateValide_(d.champs.date)))) throw new Error('Un marché doit conserver un lieu et une date valide.');
@@ -471,6 +477,7 @@ function adminCreer_(d) {
   if (nom === 'Mouvements' && (String(valeurs.type || '') !== 'transfert' || ['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
   if (nom === 'Catalogue' && !valeurs.id) valeurs.id = Utilities.getUuid();
   if (nom === 'Catalogue' && !valeurs.nom) throw new Error('Le nom de la création est obligatoire.');
+  if (nom === 'Catalogue' && valeurs.disponibilite === 'en stock' && valeurs.quantite === '') throw new Error('Indique la quantité en stock (0 si aucun exemplaire n’est disponible).');
   if (nom === 'Marches' && !valeurs.lieu) throw new Error('Le lieu du marché est obligatoire.');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let f = ss.getSheetByName(nom);
@@ -501,6 +508,7 @@ function adminLire_() {
   if (cataloguePrive && cataloguePrive.getLastRow() >= 1) {
     const colonnesCatalogue = cataloguePrive.getRange(1, 1, 1, cataloguePrive.getLastColumn()).getValues()[0].map(String);
     if (colonnesCatalogue.indexOf('cout_fabrication') < 0) cataloguePrive.getRange(1, cataloguePrive.getLastColumn() + 1).setValue('cout_fabrication');
+    if (colonnesCatalogue.indexOf('quantite') < 0) cataloguePrive.getRange(1, cataloguePrive.getLastColumn() + 1).setValue('quantite');
   }
   noms.forEach(function (nom) {
     const feuille = ss.getSheetByName(nom);
