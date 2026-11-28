@@ -4,7 +4,7 @@ const SITE_URL = 'https://willbwa.github.io/willbwa/';
 const INSTA_URL = 'https://www.instagram.com/artisan_willbwa/';
 
 const ONGLETS = {
-  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'quantite', 'essence', 'dimensions', 'finition', 'ordre'],
+  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'quantite', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
   Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
   Reservations: ['date_heure', 'client', 'email', 'telephone', 'remise', 'marche', 'adresse', 'articles', 'total', 'statut', 'note', 'ids_qte', 'stock_rendu'],
   Messages: ['date_heure', 'nom', 'email', 'message'],
@@ -275,7 +275,7 @@ function doPost(e) {
 // Modification d'une ligne existante uniquement; aucune écriture dans Config ni dans les colonnes de stock.
 function adminModifier_(d) {
   const autorise = {
-    Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre'],
+    Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
     Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
     Reservations: ['statut', 'note', 'remise', 'marche', 'adresse'],
     Projets: ['statut', 'creation', 'usage', 'modification', 'description', 'dimensions', 'bois', 'budget'],
@@ -298,7 +298,7 @@ function adminModifier_(d) {
     let valeur = d.champs[cle];
     if (valeur === null || valeur === undefined) valeur = '';
     if (typeof valeur === 'object') throw new Error('Valeur invalide pour ' + cle);
-    if (['prix', 'montant', 'quantite', 'prix_unitaire', 'ordre'].indexOf(cle) >= 0 && valeur !== '') {
+    if (['prix', 'montant', 'quantite', 'prix_unitaire', 'ordre', 'cout_fabrication'].indexOf(cle) >= 0 && valeur !== '') {
       valeur = Number(valeur);
       if (!isFinite(valeur) || valeur < 0) throw new Error('Valeur numérique invalide pour ' + cle);
       if (cle === 'quantite' && !Number.isInteger(valeur)) throw new Error('La quantité doit être un nombre entier.');
@@ -331,7 +331,7 @@ function adminCreer_(d) {
     Depenses: ['date', 'description', 'notes', 'montant', 'mode_paiement', 'source', 'fournisseur'],
     Ventes: ['date', 'creation', 'quantite', 'prix_unitaire', 'lieu', 'mode_paiement', 'note'],
     Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note'],
-    Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre'],
+    Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
     Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin']
   };
   const nom = String(d.feuille || ''), entetes = schemas[nom];
@@ -377,6 +377,12 @@ function adminLire_() {
     'Depenses', 'Ventes', 'Mouvements'];
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const donnees = {}, compteurs = {};
+  // Migration douce : ajoute le coût estimé au catalogue privé sans toucher aux données existantes.
+  const cataloguePrive = ss.getSheetByName('Catalogue');
+  if (cataloguePrive && cataloguePrive.getLastRow() >= 1) {
+    const colonnesCatalogue = cataloguePrive.getRange(1, 1, 1, cataloguePrive.getLastColumn()).getValues()[0].map(String);
+    if (colonnesCatalogue.indexOf('cout_fabrication') < 0) cataloguePrive.getRange(1, cataloguePrive.getLastColumn() + 1).setValue('cout_fabrication');
+  }
   noms.forEach(function (nom) {
     const feuille = ss.getSheetByName(nom);
     if (!feuille || feuille.getLastRow() < 1) {
