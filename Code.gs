@@ -351,7 +351,7 @@ function adminCreer_(d) {
   if (!valeurs.date) valeurs.date = Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
   if (['Depenses', 'Ventes'].indexOf(nom) >= 0 && ['liquide', 'banque'].indexOf(String(valeurs.mode_paiement || '')) < 0) throw new Error('Choisis liquide ou banque pour le portefeuille.');
   if (nom === 'Depenses' && !(Number(valeurs.montant) > 0)) throw new Error('Le montant de la dépense doit être supérieur à zéro.');
-  if (nom === 'Ventes' && (!valeurs.creation || !(Number(valeurs.quantite) > 0) || !Number.isInteger(Number(valeurs.quantite)))) throw new Error('Choisis une création et une quantité entière supérieure à zéro.');
+  if (nom === 'Ventes' && (!valeurs.creation || !(Number(valeurs.quantite) > 0) || !Number.isInteger(Number(valeurs.quantite)) || !(Number(valeurs.prix_unitaire) > 0))) throw new Error('Choisis une création, une quantité entière et un prix unitaire supérieur à zéro.');
   if (nom === 'Mouvements' && (['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
   if (nom === 'Catalogue' && !valeurs.id) valeurs.id = Utilities.getUuid();
   if (nom === 'Catalogue' && !valeurs.nom) throw new Error('Le nom de la création est obligatoire.');
