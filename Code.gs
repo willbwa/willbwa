@@ -423,7 +423,41 @@ function adminLire_() {
       }
     });
   }
-  return { ok: true, donnees: donnees, statistiquesResume: resume };
+  // Soldes et résultat calculés sur tout l'historique, pas seulement les 1 500 lignes affichées.
+  const financier = { ventes: 0, depenses: 0, liquide: 0, banque: 0 };
+  const montant_ = function (v) { const n = Number(v); return isFinite(n) ? n : 0; };
+  const portefeuille_ = function (v) {
+    const m = String(v || '').trim().toLowerCase();
+    if (['liquide', 'espèces', 'especes', 'cash'].indexOf(m) >= 0) return 'liquide';
+    if (['banque', 'virement', 'qr', 'carte'].indexOf(m) >= 0) return 'banque';
+    return '';
+  };
+  ['Ventes', 'Depenses', 'Mouvements'].forEach(function (nom) {
+    const feuille = ss.getSheetByName(nom);
+    if (!feuille || feuille.getLastRow() < 2) return;
+    const lignes = feuille.getDataRange().getValues();
+    const entetes = lignes.shift().map(function (v) { return String(v || ''); });
+    const ix = {}; entetes.forEach(function (k, i) { ix[k] = i; });
+    lignes.forEach(function (l) {
+      if (nom === 'Ventes') {
+        const total = montant_(l[ix.quantite]) * montant_(l[ix.prix_unitaire]);
+        financier.ventes += total;
+        const p = portefeuille_(l[ix.mode_paiement]);
+        if (p) financier[p] += total;
+      } else if (nom === 'Depenses') {
+        const total = montant_(l[ix.montant]);
+        financier.depenses += total;
+        const p = portefeuille_(l[ix.mode_paiement]);
+        if (p) financier[p] -= total;
+      } else {
+        const total = montant_(l[ix.montant]);
+        const de = portefeuille_(l[ix.de]), vers = portefeuille_(l[ix.vers]);
+        if (de) financier[de] -= total;
+        if (vers) financier[vers] += total;
+      }
+    });
+  });
+  return { ok: true, donnees: donnees, statistiquesResume: resume, resumeFinancier: financier };
 }
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
