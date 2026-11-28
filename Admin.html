@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://accounts.google.com/gsi/client" async defer onload="boot()"></script>
   <style>
     :root{color-scheme:light;--ink:#392718;--paper:#fbf6ed;--cream:#f1e4ce;--gold:#b7833e;--line:#dfd0b8}
     *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
@@ -38,7 +38,7 @@
   const tabs=['Résumé','Catalogue','Marchés','Réservations','Messages','Projets','Dépenses','Ventes','Mouvements','Statistiques'];
   const headers={Catalogue:['id','nom','categorie','prix','disponibilite','visible'],Marches:['date','lieu','horaires','public'],Reservations:['date_heure','client','articles','total','statut','remise'],Messages:['date_heure','nom','email','message'],Projets:['date_heure','type','creation','prenom','email','projet','statut'],Depenses:['date','description','montant','mode_paiement','source','fournisseur'],Ventes:['date','creation','quantite','prix_unitaire','lieu','mode_paiement'],Mouvements:['date','type','montant','de','vers','note'],Statistiques:['date_heure','evenement','page','article_nom']};
   function status(t,kind=''){ $('status').className=kind; $('status').textContent=t; }
-  function call(action,payload={}){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e))).adminApi(idToken,action,payload));}
+  function call(action,payload={}){return new Promise((resolve,reject)=>google.script.run.withSuccessHandler(resolve).withFailureHandler(e=>reject(new Error(e.message||String(e)))).adminApi(idToken,action,payload));}
   function boot(){google.script.run.withSuccessHandler(cfg=>{if(!cfg||!cfg.clientId){status('La connexion privée doit être configurée dans Apps Script.','error');return;}google.accounts.id.initialize({client_id:cfg.clientId,callback:res=>{idToken=res.credential;load();}});google.accounts.id.renderButton($('googleBtn'),{theme:'outline',size:'large',text:'signin_with',shape:'pill',locale:'fr'});}).withFailureHandler(e=>status(e.message||String(e),'error')).adminBootstrap();}
   function showApp(){ $('login').classList.add('hidden');$('app').classList.remove('hidden');$('logout').classList.remove('hidden'); }
   function logout(){idToken='';cache={};$('app').classList.add('hidden');$('login').classList.remove('hidden');$('logout').classList.add('hidden');status('Déconnecté.');$('googleBtn').replaceChildren();boot();}
@@ -56,7 +56,6 @@
     if(sheet==='Ventes'){inputs.creation=field(form,'Création vendue','creation');inputs.quantite=field(form,'Quantité','quantite','number');inputs.prix_unitaire=field(form,'Prix unitaire (€)','prix_unitaire','number');inputs.lieu=field(form,'Lieu / marché','lieu');inputs.mode_paiement=field(form,'Portefeuille reçu','mode_paiement',null,['liquide','banque']);inputs.note=field(form,'Note','note','textarea');}
     if(sheet==='Mouvements'){inputs.type=field(form,'Type de mouvement','type',null,['transfert']);inputs.montant=field(form,'Montant (€)','montant','number');inputs.de=field(form,'De','de',null,['liquide','banque']);inputs.vers=field(form,'Vers','vers',null,['banque','liquide']);inputs.note=field(form,'Note','note');}
     form.prepend(date);const submit=el('button','Enregistrer');submit.type='submit';form.appendChild(submit);form.addEventListener('submit',async e=>{e.preventDefault();submit.disabled=true;try{const champs={date:date.value};Object.entries(inputs).forEach(([k,v])=>champs[k]=v.value.trim());const r=await call('admin_creer',{feuille:sheet,champs});if(!r.ok)throw Error(r.erreur||'Échec de l’enregistrement');status('Enregistré.','success');const data=await call('admin_lire');cache=data.donnees||{};render();form.reset();}catch(err){status(err.message,'error');}finally{submit.disabled=false;}});box.appendChild(form);c.appendChild(box);table(c,sheet);}
-  boot();
 </script>
 </body>
 </html>
