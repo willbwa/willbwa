@@ -313,7 +313,7 @@ function adminModifier_(d) {
       if (cle === 'quantite' && !Number.isInteger(valeur)) throw new Error('La quantité doit être un nombre entier.');
       if (['montant', 'prix_unitaire'].indexOf(cle) >= 0 && valeur <= 0) throw new Error(cle + ' doit être supérieur à zéro.');
     } else {
-      const choix = { 'Catalogue.disponibilite':['en stock','sur commande','épuisé','ancien'], 'Catalogue.visible':['oui','non'], 'Marches.public':['oui','non'], 'Reservations.statut':['nouvelle','confirmée','payée','prête','remise ou envoyée','annulée'], 'Projets.statut':['nouvelle','en discussion','acceptée','refusée','terminée'], 'Depenses.mode_paiement':['liquide','banque'], 'Ventes.mode_paiement':['liquide','banque'], 'Mouvements.type':['transfert'], 'Mouvements.de':['liquide','banque'], 'Mouvements.vers':['liquide','banque'] };
+      const choix = { 'Catalogue.disponibilite':['en stock','sur commande','épuisé','ancien'], 'Catalogue.visible':['oui','non'], 'Marches.public':['oui','non'], 'Reservations.statut':['nouvelle','confirmée','payée','prête','remise ou envoyée','annulée'], 'Projets.statut':['nouvelle','en discussion','acceptée','refusée','terminée'], 'Depenses.mode_paiement':['liquide','banque'], 'Ventes.mode_paiement':['liquide','banque'], 'Mouvements.type':['transfert'], 'Mouvements.de':['liquide','banque'], 'Mouvements.vers':['liquide','banque'], 'Reservations.remise':['Retrait à un marché','Retrait chez Willbwa (pas à un marché)','Envoi par la poste'] };
       const autorisations = choix[nom + '.' + cle];
       if (autorisations && valeur !== '' && autorisations.indexOf(String(valeur)) < 0) throw new Error('Choix invalide pour ' + cle + '.');
       valeur = net_(valeur, cle === 'description' || cle === 'notes' ? 4000 : 1500);
@@ -321,6 +321,8 @@ function adminModifier_(d) {
     changements.push({ colonne: entetes.indexOf(cle) + 1, valeur: valeur });
   });
   if (!changements.length) throw new Error('Aucune modification reçue.');
+  if (nom === 'Catalogue' && d.champs.nom !== undefined && !String(d.champs.nom).trim()) throw new Error('Le nom de la création est obligatoire.');
+  if (nom === 'Marches' && ((d.champs.lieu !== undefined && !String(d.champs.lieu).trim()) || (d.champs.date !== undefined && !dateValide_(d.champs.date)))) throw new Error('Un marché doit conserver un lieu et une date valide.');
   if (['Mouvements', 'Ventes', 'Depenses'].indexOf(nom) >= 0) {
     const actuel = f.getRange(ligne, 1, 1, entetes.length).getValues()[0], fusion = {};
     entetes.forEach(function (cle, i) { fusion[cle] = actuel[i]; });
@@ -329,7 +331,19 @@ function adminModifier_(d) {
     if (nom === 'Ventes' && (!String(fusion.creation || '').trim() || (Object.prototype.hasOwnProperty.call(d.champs, 'creation') && !lire_('Catalogue').some(function (p) { return String(p.nom || '').trim() === String(fusion.creation).trim(); })) || !(Number(fusion.quantite) > 0) || !Number.isInteger(Number(fusion.quantite)) || !(Number(fusion.prix_unitaire) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une vente doit conserver une création existante, une quantité entière, un prix positif et un portefeuille valide.');
     if (nom === 'Depenses' && (!String(fusion.description || '').trim() || !(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une dépense doit conserver une description, un montant positif et un portefeuille valide.');
   }
+  let ancienStatutReservation = '';
+  if (nom === 'Reservations' && d.champs.statut !== undefined) {
+    const si = entetes.indexOf('statut'), ri = entetes.indexOf('stock_rendu');
+    ancienStatutReservation = si >= 0 ? String(f.getRange(ligne, si + 1).getValue() || '').trim().toLowerCase() : '';
+    const nouveauStatut = String(d.champs.statut || '').trim().toLowerCase();
+    if (ancienStatutReservation.indexOf('annul') === 0 && nouveauStatut.indexOf('annul') !== 0 && ri >= 0 && String(f.getRange(ligne, ri + 1).getValue()).toLowerCase() === 'oui') {
+      throw new Error('Cette réservation a déjà été annulée et son stock remis. Pour éviter un stock incorrect, crée une nouvelle réservation plutôt que de réactiver celle-ci.');
+    }
+  }
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
+  if (nom === 'Reservations' && d.champs.statut !== undefined && String(d.champs.statut).trim().toLowerCase().indexOf('annul') === 0) {
+    rendreStockSiAnnulee_(f, ligne, entetes);
+  }
   cacheVider_();
   return { ok: true, feuille: nom, ligne: ligne };
 }
