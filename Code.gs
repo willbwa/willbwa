@@ -362,17 +362,18 @@ function adminLire_() {
     }
     const valeurs = feuille.getDataRange().getValues();
     const entetes = valeurs.shift().map(function (v) { return String(v || ''); });
-    donnees[nom] = valeurs.filter(function (ligne) {
-      return ligne.some(function (cellule) { return cellule !== ''; });
-    }).slice(-1500).map(function (ligne) {
-      const objet = {};
-      entetes.forEach(function (cle, i) {
-        if (cle) objet[cle] = ligne[i] instanceof Date
-          ? Utilities.formatDate(ligne[i], FUSEAU, "yyyy-MM-dd'T'HH:mm:ss")
-          : ligne[i];
+    donnees[nom] = valeurs.map(function (ligne, index) { return { ligne: ligne, numero: index + 2 }; })
+      .filter(function (item) {
+        return item.ligne.some(function (cellule) { return cellule !== ''; });
+      }).slice(-1500).map(function (item) {
+        const objet = { __ligne: item.numero }, ligne = item.ligne;
+        entetes.forEach(function (cle, i) {
+          if (cle) objet[cle] = ligne[i] instanceof Date
+            ? Utilities.formatDate(ligne[i], FUSEAU, "yyyy-MM-dd'T'HH:mm:ss")
+            : ligne[i];
+        });
+        return objet;
       });
-      return objet;
-    });
   });
   return { ok: true, donnees: donnees };
 }
