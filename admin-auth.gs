@@ -55,8 +55,10 @@ function verifierAccesPrive_(idToken) {
   const expiresAt = Number(claims.exp);
   const email = String(claims.email || '').trim().toLowerCase();
   const verified = claims.email_verified === true || String(claims.email_verified).toLowerCase() === 'true';
-  if (claims.aud !== clientId || !expiresAt || expiresAt * 1000 <= Date.now() ||
-      !verified || !email || allowed.indexOf(email) < 0) {
+  const issuer = String(claims.iss || '');
+  const issuerValide = issuer === 'accounts.google.com' || issuer === 'https://accounts.google.com';
+  if (!issuerValide || claims.aud !== clientId || !expiresAt || expiresAt * 1000 <= Date.now() ||
+      !verified || !email || !claims.sub || allowed.indexOf(email) < 0) {
     throw new Error('Ce compte Google n’est pas autorisé.');
   }
   return email;
