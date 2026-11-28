@@ -178,7 +178,10 @@ function cacheVider_() {
   for (let i = 0; i < n; i++) cles.push('d' + i);
   c.removeAll(cles);
 }
-function doGet() {
+function doGet(e) {
+  if (e && e.parameter && e.parameter.admin === '1') {
+    return HtmlService.createHtmlOutputFromFile('Admin').setTitle('Willbwa · Espace privé');
+  }
   let txt = null;
   try { txt = cacheGet_(); } catch (e) {}
   if (!txt) {
@@ -623,4 +626,18 @@ function nettoyerDonnees() {
   traiter('Projets', 'conservation_projets_mois', ['prenom', 'email', 'projet', 'usage', 'modification', 'description'], s => /^(accept|refus|termin)/.test(s), false, 'photos');
   traiter('Messages', 'conservation_messages_mois', [], () => true, true, null);
   Logger.log(resume.length ? 'Effacé : ' + resume.join(' ; ') : 'Rien à effacer.');
+}
+
+
+/* ---------- Interface privée Apps Script ---------- */
+function adminBootstrap() {
+  return { clientId: PropertiesService.getScriptProperties().getProperty('WILLBWA_ADMIN_OAUTH_CLIENT_ID') || '' };
+}
+function adminApi(idToken, action, payload) {
+  verifierAccesPrive_(idToken);
+  payload = payload && typeof payload === 'object' ? payload : {};
+  if (action === 'admin_lire') return adminLire_();
+  if (action === 'admin_modifier') return adminModifier_(payload);
+  if (action === 'admin_creer') return adminCreer_(payload);
+  throw new Error('Action privée inconnue.');
 }
