@@ -248,6 +248,7 @@ function doPost(e) {
     if (String(d.type || '').indexOf('admin_') === 0) {
       exigerAccesPrive_(d);
       if (d.type === 'admin_lire') return json_(adminLire_());
+      if (d.type === 'admin_modifier') return json_(adminModifier_(d));
       throw new Error('Action privée inconnue.');
     }
     if (d.type === 'statistique') return json_(statistique_(d));
@@ -264,6 +265,47 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, erreur: err.message });
   }
+}
+
+/* ---------- Espace privé : modifications authentifiées ---------- */
+// Modification d'une ligne existante uniquement; aucune écriture dans Config ni dans les colonnes de stock.
+function adminModifier_(d) {
+  const autorise = {
+    Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre'],
+    Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
+    Reservations: ['statut', 'note', 'remise', 'marche', 'adresse'],
+    Projets: ['statut'],
+    Depenses: ['date', 'description', 'notes', 'montant', 'mode_paiement', 'source', 'fournisseur'],
+    Ventes: ['date', 'creation', 'quantite', 'prix_unitaire', 'lieu', 'mode_paiement', 'note'],
+    Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note']
+  };
+  const nom = String(d.feuille || '');
+  const champs = autorise[nom];
+  if (!champs) throw new Error('Cette feuille ne peut pas être modifiée ici.');
+  const ligne = Number(d.ligne);
+  if (!Number.isInteger(ligne) || ligne < 2) throw new Error('Numéro de ligne invalide.');
+  if (!d.champs || typeof d.champs !== 'object' || Array.isArray(d.champs)) throw new Error('Modifications invalides.');
+  const ss = SpreadsheetApp.getActiveSpreadsheet(), f = ss.getSheetByName(nom);
+  if (!f || ligne > f.getLastRow()) throw new Error('Ligne introuvable.');
+  const entetes = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0].map(String);
+  const changements = [];
+  Object.keys(d.champs).forEach(function (cle) {
+    if (champs.indexOf(cle) < 0 || entetes.indexOf(cle) < 0) throw new Error('Champ non autorisé : ' + cle);
+    let valeur = d.champs[cle];
+    if (valeur === null || valeur === undefined) valeur = '';
+    if (typeof valeur === 'object') throw new Error('Valeur invalide pour ' + cle);
+    if (['prix', 'montant', 'quantite', 'prix_unitaire', 'ordre'].indexOf(cle) >= 0 && valeur !== '') {
+      valeur = Number(valeur);
+      if (!isFinite(valeur) || valeur < 0) throw new Error('Valeur numérique invalide pour ' + cle);
+    } else {
+      valeur = net_(valeur, cle === 'description' || cle === 'notes' ? 4000 : 1500);
+    }
+    changements.push({ colonne: entetes.indexOf(cle) + 1, valeur: valeur });
+  });
+  if (!changements.length) throw new Error('Aucune modification reçue.');
+  changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
+  cacheVider_();
+  return { ok: true, feuille: nom, ligne: ligne };
 }
 
 /* ---------- Espace privé : lecture authentifiée ---------- */
