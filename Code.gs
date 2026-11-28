@@ -244,6 +244,12 @@ function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
     if (d.piege) return json_({ ok: true });                       // robot : on fait semblant
+    // Toute action privée est authentifiée avant le moindre accès aux données.
+    if (String(d.type || '').indexOf('admin_') === 0) {
+      exigerAccesPrive_(d);
+      if (d.type === 'admin_lire') return json_(adminLire_());
+      throw new Error('Action privée inconnue.');
+    }
     if (d.type === 'statistique') return json_(statistique_(d));
     const email = net_(d.email, 120).toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('Adresse e-mail invalide.');
@@ -258,6 +264,36 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, erreur: err.message });
   }
+}
+
+/* ---------- Espace privé : lecture authentifiée ---------- */
+// Liste fermée des onglets lisibles. Config est volontairement exclu.
+function adminLire_() {
+  const noms = ['Catalogue', 'Marches', 'Reservations', 'Messages', 'Projets', 'Statistiques',
+    'Depenses', 'Ventes', 'Mouvements'];
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const donnees = {};
+  noms.forEach(function (nom) {
+    const feuille = ss.getSheetByName(nom);
+    if (!feuille || feuille.getLastRow() < 1) {
+      donnees[nom] = [];
+      return;
+    }
+    const valeurs = feuille.getDataRange().getValues();
+    const entetes = valeurs.shift().map(function (v) { return String(v || ''); });
+    donnees[nom] = valeurs.filter(function (ligne) {
+      return ligne.some(function (cellule) { return cellule !== ''; });
+    }).slice(-1500).map(function (ligne) {
+      const objet = {};
+      entetes.forEach(function (cle, i) {
+        if (cle) objet[cle] = ligne[i] instanceof Date
+          ? Utilities.formatDate(ligne[i], FUSEAU, "yyyy-MM-dd'T'HH:mm:ss")
+          : ligne[i];
+      });
+      return objet;
+    });
+  });
+  return { ok: true, donnees: donnees };
 }
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
