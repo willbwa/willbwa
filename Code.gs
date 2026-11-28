@@ -243,6 +243,8 @@ function rendreStockSiAnnulee_(f, ligne, h, ancienStatut) {
       if (m) poser(d.findIndex((r, k) => k > 0 && String(r[nomI]).trim() === m[2].trim()), Number(m[1]));
     });
   }
+  // Ne rien modifier si une seule ligne est invalide : évite une remise partielle répétée.
+  if (!ok || !n) { f.getRange(ligne, cr + 1).setValue('à vérifier à la main'); return; }
   Object.keys(ajout).forEach(i => {
     const cur = d[i][qI];
     if (cur !== '' && !isNaN(Number(cur))) cat.getRange(Number(i) + 1, qI + 1).setValue(Number(cur) + ajout[i]);
