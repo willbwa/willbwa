@@ -848,11 +848,25 @@ function nettoyerDonnees() {
       if (!(date < s2 || (final && date < s1))) continue;            // pas encore l'heure
       if (supprimerLigne) { f.deleteRow(i + 1); c++; continue; }
       const marquePerso = h.indexOf(perso[0]), photoIndex = colPhotos ? h.indexOf(colPhotos) : -1;
-      if (marquePerso >= 0 && String(v[i][marquePerso]) === '(supprimé)') continue;   // déjà fait
-      if (photoIndex >= 0) String(v[i][photoIndex] || '').split(/\s+/).forEach(u => { const m = u.match(/[-\w]{25,}/); if (m) { try { DriveApp.getFileById(m[0]).setTrashed(true); } catch (err) {} } });
-      perso.forEach((k, j) => { const ci = h.indexOf(k); if (ci >= 0) f.getRange(i + 1, ci + 1).setValue(j === 0 ? '(supprimé)' : ''); });
-      if (photoIndex >= 0) f.getRange(i + 1, photoIndex + 1).setValue('');
-      c++;
+      const dejaAnonyme = marquePerso >= 0 && String(v[i][marquePerso]) === '(supprimé)';
+      // Même si les autres données ont déjà été anonymisées, réessayer les photos
+      // dont la suppression Drive a échoué : ne pas perdre leur identifiant.
+      let photosOk = true;
+      if (photoIndex >= 0) {
+        const liensPhotos = String(v[i][photoIndex] || '').split(/\s+/).filter(Boolean);
+        liensPhotos.forEach(u => {
+          const m = u.match(/[-\w]{25,}/);
+          if (!m) { photosOk = false; return; }
+          try { DriveApp.getFileById(m[0]).setTrashed(true); }
+          catch (err) { photosOk = false; console.error('Photo de projet non supprimée (' + m[0] + ') : ' + err.message); }
+        });
+        if (photosOk && liensPhotos.length) f.getRange(i + 1, photoIndex + 1).setValue('');
+      }
+      if (!dejaAnonyme) perso.forEach((k, j) => {
+        const ci = h.indexOf(k);
+        if (ci >= 0) f.getRange(i + 1, ci + 1).setValue(j === 0 ? '(supprimé)' : '');
+      });
+      if (!dejaAnonyme || (photoIndex >= 0 && photosOk && String(v[i][photoIndex] || ''))) c++;
     }
     if (c) resume.push(nom + ' : ' + c);
   };
