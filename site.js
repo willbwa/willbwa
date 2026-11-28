@@ -279,7 +279,10 @@ async function envoyer(form, corps, msg, apres) {
   try {
     const r = await (await fetch(API, { method: 'POST', body: JSON.stringify(corps) })).json();
     if (!r.ok) throw new Error(r.erreur || 'Erreur');
-    m.className = 'msg ok'; m.textContent = 'Merci, c’est envoyé ! Tu reçois une confirmation par e-mail.';
+    m.className = r.emailsOk === false ? 'msg err' : 'msg ok';
+    m.textContent = r.emailsOk === false
+      ? 'Ta demande est bien enregistrée, mais un e-mail n’a pas pu être envoyé. Tu peux vérifier avec Willbwa directement.'
+      : 'Merci, c’est envoyé ! Tu reçois une confirmation par e-mail.';
     apres && apres(); form.reset();
   } catch (e) {
     const mail = data.contact && data.contact.email;
