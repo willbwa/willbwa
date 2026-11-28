@@ -114,22 +114,29 @@ function reste_(p) {
   if (!Number.isInteger(q) || q < 0) return 0;
   return q;
 }
-function retirerStock_(id, q) {
+// Prépare toutes les diminutions avant la première écriture : une erreur sur un article
+// ne doit pas laisser les autres articles déjà débités.
+function preparerRetraitStock_(lignes) {
   const f = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Catalogue');
   if (!f || f.getLastRow() < 2) throw new Error('Catalogue introuvable : stock non modifié.');
   const v = f.getDataRange().getValues(), h = v[0];
   const ci = h.indexOf('id'), cq = h.indexOf('quantite');
   if (ci < 0 || cq < 0) throw new Error('Colonnes de stock manquantes dans Catalogue.');
-  for (let i = 1; i < v.length; i++) {
-    if (String(v[i][ci]) === String(id)) {
-      if (v[i][cq] === '' || v[i][cq] == null) return; // quantité vide : suivi de stock désactivé
-      const actuel = Number(v[i][cq]);
-      if (!Number.isInteger(actuel) || actuel < q || !Number.isInteger(q) || q < 1) throw new Error('Stock incohérent pour « ' + id + ' » : vérifie le Catalogue.');
-      f.getRange(i + 1, cq + 1).setValue(actuel - q);
-      return;
-    }
-  }
-  throw new Error('Création introuvable dans Catalogue : stock non modifié.');
+  const demandes = {};
+  lignes.forEach(l => { demandes[String(l.id)] = (demandes[String(l.id)] || 0) + Number(l.q); });
+  const retraits = [];
+  Object.keys(demandes).forEach(id => {
+    const i = v.findIndex((r, k) => k > 0 && String(r[ci]) === id), q = demandes[id];
+    if (i < 1 || !Number.isInteger(q) || q < 1) throw new Error('Création ou quantité invalide pour « ' + id + ' ».');
+    if (v[i][cq] === '' || v[i][cq] == null) return; // quantité vide : suivi de stock désactivé
+    const actuel = Number(v[i][cq]);
+    if (!Number.isInteger(actuel) || actuel < q) throw new Error('Stock incohérent pour « ' + id + ' » : vérifie le Catalogue.');
+    retraits.push({ ligne: i + 1, quantite: actuel - q });
+  });
+  return { feuille: f, colonne: cq + 1, retraits: retraits };
+}
+function retirerStockPrepare_(plan) {
+  plan.retraits.forEach(r => plan.feuille.getRange(r.ligne, plan.colonne).setValue(r.quantite));
 }
 
 // Pièces réservées par des clients mais pas encore remises (statut ni « annulée » ni « remise ou envoyée »)
@@ -637,17 +644,29 @@ function reservation_(d, email) {
   const LIB = { marche: 'Retrait à un marché', domicile: 'Retrait chez Willbwa (pas à un marché)', envoi: 'Envoi par la poste' };
   if (remise === 'marche' && !marche) throw new Error('Choisis un marché.');
   if (remise === 'envoi' && !adresse) throw new Error('Indique ton adresse pour l’envoi.');
+  // Vérifier toutes les lignes et tous les stocks avant d'enregistrer la réservation.
+  const planStock = preparerRetraitStock_(lignes);
   ajouter_('Reservations', { date_heure: new Date(), client: client, email: email,
     telephone: net_(d.telephone, 30), remise: LIB[remise], marche: marche, adresse: adresse,
     articles: txt, total: total, statut: 'nouvelle', note: net_(d.note, 500),
     ids_qte: lignes.map(l => l.id + ':' + l.q).join(';'), stock_rendu: '' });
+  const feuilleReservations = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Reservations');
+  const ligneReservation = feuilleReservations.getLastRow();
+  try {
+    retirerStockPrepare_(planStock);
+  } catch (err) {
+    // La réservation existe déjà : signaler explicitement qu'une vérification manuelle est requise.
+    const hReservations = feuilleReservations.getRange(1, 1, 1, feuilleReservations.getLastColumn()).getValues()[0];
+    const cRendu = hReservations.indexOf('stock_rendu');
+    if (cRendu >= 0) feuilleReservations.getRange(ligneReservation, cRendu + 1).setValue('à vérifier à la main');
+    throw new Error('Réservation enregistrée, mais le stock doit être vérifié à la main. Contacte Willbwa avant de recommencer.');
+  }
   try {
     statistique_({ evenement: 'reservation_recue', page: 'reservation' });
     lignes.forEach(l => statistique_({ evenement: 'article_reserve', page: 'reservation', article_id: l.id, article_nom: l.nom }));
   } catch (err) { console.error('Statistiques non enregistrées : ' + err.message); }
-  // Le verrou global de doPost empêche deux réservations simultanées de consommer le même stock.
-  // La quantité a déjà été contrôlée ; retirerStock_ vérifie encore chaque écriture.
-  lignes.forEach(l => retirerStock_(l.id, l.q));   // la pièce est mise de côté pour ce client
+  // Le verrou global de doPost protège la vérification et le retrait contre les réservations simultanées.
+  // Les quantités sont débitées en une seule opération par création, même si elle apparaît plusieurs fois.
   cacheVider_();
   const resume = txt + '\nTotal articles : ' + total.toFixed(2) + ' €';
   let pdf = null;
