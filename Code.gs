@@ -342,7 +342,7 @@ function adminCreer_(d) {
     let v = d.champs[cle];
     if (v === null || v === undefined) v = '';
     if (typeof v === 'object') throw new Error('Valeur invalide pour ' + cle);
-    if (['montant', 'quantite', 'prix_unitaire', 'prix', 'ordre'].indexOf(cle) >= 0) {
+    if (['montant', 'quantite', 'prix_unitaire', 'prix', 'ordre', 'cout_fabrication'].indexOf(cle) >= 0) {
       if (v === '') { if (cle === 'montant') throw new Error('Le montant est obligatoire.'); }
       else { v = Number(v); if (!isFinite(v) || v < 0 || (cle === 'quantite' && !Number.isInteger(v))) throw new Error('Valeur numérique invalide : ' + cle); }
     } else {
