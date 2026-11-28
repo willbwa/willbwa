@@ -457,7 +457,12 @@ function adminCreer_(d) {
   if (nom === 'Marches' && !valeurs.lieu) throw new Error('Le lieu du marché est obligatoire.');
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let f = ss.getSheetByName(nom);
-  if (!f) { f = ss.insertSheet(nom); f.getRange(1, 1, 1, entetes.length).setValues([entetes]).setFontWeight('bold'); f.setFrozenRows(1); }
+  if (!f) f = ss.insertSheet(nom);
+  // Une feuille existante mais totalement vide doit être initialisée comme une nouvelle feuille.
+  if (f.getLastRow() === 0 || f.getLastColumn() === 0) {
+    f.getRange(1, 1, 1, entetes.length).setValues([entetes]).setFontWeight('bold');
+    f.setFrozenRows(1);
+  }
   const existants = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0].map(String);
   if (entetes.some(function (cle) { return existants.indexOf(cle) < 0; })) throw new Error('Les en-têtes de la feuille ' + nom + ' doivent être vérifiés avant toute écriture.');
   const id = Utilities.getUuid();
