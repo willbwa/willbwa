@@ -310,6 +310,7 @@ function adminModifier_(d) {
     let valeur = d.champs[cle];
     if (valeur === null || valeur === undefined) valeur = '';
     if (typeof valeur === 'object') throw new Error('Valeur invalide pour ' + cle);
+    if (cle === 'date' && valeur === '') throw new Error('La date est obligatoire.');
     if ((cle === 'date' || cle === 'date_fin') && valeur !== '' && !dateValide_(valeur)) throw new Error('Date invalide pour ' + cle + ' : utilise le format AAAA-MM-JJ.');
     if (['prix', 'montant', 'quantite', 'prix_unitaire', 'ordre', 'cout_fabrication'].indexOf(cle) >= 0 && valeur !== '') {
       valeur = Number(valeur);
