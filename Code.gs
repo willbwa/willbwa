@@ -790,18 +790,31 @@ function projet_(d, email) {
   // photos : 3 maximum, images seulement, enregistrées dans ton Drive (dossier « Willbwa projets », privé)
   const blobs = [];
   (Array.isArray(d.photos) ? d.photos : []).slice(0, 3).forEach((p, i) => {
-    const m = String(p).match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+\/=]+)$/);
+    const source = String(p);
+    // Limiter la taille encodée avant le décodage pour éviter une allocation mémoire excessive.
+    if (source.length > 3400000) throw new Error('Une photo est trop lourde (2,5 Mo maximum).');
+    const m = source.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+\/=]+)$/);
     if (!m) return;
     const o = Utilities.base64Decode(m[2]);
-    if (o.length > 2500000) throw new Error('Une photo est trop lourde.');
+    if (o.length > 2500000) throw new Error('Une photo est trop lourde (2,5 Mo maximum).');
     const ok = (o[0] === -1 && o[1] === -40) || (o[0] === -119 && o[1] === 80) || (o[0] === 82 && o[1] === 73);   // JPEG, PNG, WEBP
     if (!ok) return;
     blobs.push(Utilities.newBlob(o, m[1], 'projet-' + prenom.replace(/[^\w]+/g, '') + '-' + (i + 1) + '.' + (m[1] === 'image/png' ? 'png' : m[1] === 'image/webp' ? 'webp' : 'jpg')));
   });
-  const liens = [];
+  const liens = [], fichiersCrees = [];
   if (blobs.length) {
     const it = DriveApp.getFoldersByName('Willbwa projets'), dossier = it.hasNext() ? it.next() : DriveApp.createFolder('Willbwa projets');
-    blobs.forEach(b => liens.push(dossier.createFile(b).getUrl()));
+    try {
+      blobs.forEach(b => {
+        const fichier = dossier.createFile(b);
+        fichiersCrees.push(fichier);
+        liens.push(fichier.getUrl());
+      });
+    } catch (err) {
+      // Ne pas laisser de photos orphelines si la création de la demande échoue.
+      fichiersCrees.forEach(f => { try { f.setTrashed(true); } catch (e) { console.error('Nettoyage photo temporaire impossible : ' + e.message); } });
+      throw new Error('Impossible d’enregistrer les photos du projet. Réessaie sans les photos ou contacte Willbwa.');
+    }
   }
   const infos = [['Type', creation ? 'Création personnalisée à partir d’une pièce' : 'Projet à imaginer ensemble'], ['Création de départ', creation ? t('creation') : ''],
     ['Projet', t('projet')], ['À quoi servirait-il', t('usage')], ['À modifier', t('modification')], ['Description', t('description')],
