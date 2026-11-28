@@ -338,6 +338,8 @@ function adminCreer_(d) {
     valeurs[cle] = v;
   });
   if (!valeurs.date) valeurs.date = Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
+  if (['Depenses', 'Ventes'].indexOf(nom) >= 0 && ['liquide', 'banque'].indexOf(String(valeurs.mode_paiement || '')) < 0) throw new Error('Choisis liquide ou banque pour le portefeuille.');
+  if (nom === 'Mouvements' && (['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
   if (nom === 'Catalogue' && !valeurs.id) valeurs.id = Utilities.getUuid();
   if (nom === 'Catalogue' && !valeurs.nom) throw new Error('Le nom de la création est obligatoire.');
   if (nom === 'Marches' && !valeurs.lieu) throw new Error('Le lieu du marché est obligatoire.');
