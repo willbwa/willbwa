@@ -428,20 +428,41 @@ function adminLire_() {
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
 function statistique_(d) {
-  // Le suivi ne doit jamais bloquer une réservation si l'onglet n'est pas encore créé.
-  if (!SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Statistiques')) return { ok: true };
   const evenements = ['visite', 'article_consulte', 'ajout_selection', 'reservation_recue', 'article_reserve'];
   const pagesAutorisees = ['home', 'creations', 'categorie', 'anciennes', 'projet', 'marches', 'contact', 'infos'];
   const evenement = String(d.evenement || '');
   if (evenements.indexOf(evenement) < 0) return { ok: true };
-  const page = String(d.page || '').slice(0, 30);
-  const id = ['article_consulte', 'ajout_selection', 'article_reserve'].indexOf(evenement) >= 0 ? net_(d.article_id, 60) : '';
-  const nom = id ? net_(d.article_nom, 120) : '';
-  const date = new Date();
-  const semaine = Utilities.formatDate(date, FUSEAU, "YYYY-'S'ww");
-  ajouter_('Statistiques', { date_heure: date, semaine: semaine, evenement: evenement,
-    page: pagesAutorisees.indexOf(page) >= 0 ? page : 'autre', article_id: id, article_nom: nom });
-  return { ok: true };
+
+  // Création automatique de l'onglet au premier événement, sans préparation manuelle.
+  // Le verrou évite deux créations simultanées si plusieurs visiteurs arrivent ensemble.
+  const verrou = LockService.getScriptLock();
+  verrou.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let feuille = ss.getSheetByName('Statistiques');
+    const entetes = ['date_heure', 'semaine', 'evenement', 'page', 'article_id', 'article_nom'];
+    if (!feuille) {
+      feuille = ss.insertSheet('Statistiques');
+      feuille.getRange(1, 1, 1, entetes.length).setValues([entetes]);
+      feuille.setFrozenRows(1);
+    } else if (feuille.getLastRow() === 0) {
+      feuille.getRange(1, 1, 1, entetes.length).setValues([entetes]);
+      feuille.setFrozenRows(1);
+    }
+
+    const pageDemandee = String(d.page || '').slice(0, 30);
+    const id = ['article_consulte', 'ajout_selection', 'article_reserve'].indexOf(evenement) >= 0 ? net_(d.article_id, 60) : '';
+    const nom = id ? net_(d.article_nom, 120) : '';
+    const date = new Date();
+    const semaine = Utilities.formatDate(date, FUSEAU, "YYYY-'S'ww");
+    const ligne = { date_heure: date, semaine: semaine, evenement: evenement,
+      page: pagesAutorisees.indexOf(pageDemandee) >= 0 ? pageDemandee : 'autre',
+      article_id: id, article_nom: nom };
+    feuille.appendRow(entetes.map(function (cle) { return ligne[cle]; }));
+    return { ok: true };
+  } finally {
+    verrou.releaseLock();
+  }
 }
 
 function contact_(d, email) {
