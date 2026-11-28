@@ -248,6 +248,12 @@ function rendreStockSiAnnuleeVerrouillee_(f, ligne, h, ancienStatut) {
   const si = h.indexOf('statut');
   if (si < 0 || String(f.getRange(ligne, si + 1).getValue()).toLowerCase().indexOf('annul') !== 0) return;
   const ci = colonne('ids_qte'), cr = colonne('stock_rendu');
+  // Sur une modification manuelle multi-cellules, Google ne fournit pas toujours
+  // e.oldValue. Sans ancien statut fiable, ne pas deviner si l'article a déjà été remis.
+  if (ancienStatut === undefined || ancienStatut === null) {
+    f.getRange(ligne, cr + 1).setValue('à vérifier à la main : ancien statut indisponible');
+    return;
+  }
   if (String(ancienStatut || '').trim().toLowerCase().indexOf('remise') === 0) {
     f.getRange(ligne, cr + 1).setValue('non applicable : déjà remise');
     return;                                                                         // une pièce déjà remise ne revient pas en stock automatiquement
