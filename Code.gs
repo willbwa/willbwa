@@ -393,6 +393,17 @@ function adminCreer_(d) {
   });
   if (!valeurs.date) valeurs.date = Utilities.formatDate(new Date(), FUSEAU, 'yyyy-MM-dd');
   if (['Depenses', 'Ventes'].indexOf(nom) >= 0 && ['liquide', 'banque'].indexOf(String(valeurs.mode_paiement || '')) < 0) throw new Error('Choisis liquide ou banque pour le portefeuille.');
+  const choixCreation = {
+    'Catalogue.disponibilite': ['en stock', 'sur commande', 'épuisé', 'ancien'],
+    'Catalogue.visible': ['oui', 'non'],
+    'Marches.public': ['oui', 'non']
+  };
+  Object.keys(choixCreation).forEach(function (cle) {
+    const morceaux = cle.split('.');
+    if (morceaux[0] === nom && choixCreation[cle].indexOf(String(valeurs[morceaux[1]] || '')) < 0) {
+      throw new Error('Choix invalide pour ' + morceaux[1] + '.');
+    }
+  });
   if (nom === 'Depenses' && (!valeurs.description || !(Number(valeurs.montant) > 0))) throw new Error('La dépense doit avoir une description et un montant supérieur à zéro.');
   if (nom === 'Ventes' && (!valeurs.creation || !lire_('Catalogue').some(function (p) { return String(p.nom || '').trim() === String(valeurs.creation).trim(); }) || !(Number(valeurs.quantite) > 0) || !Number.isInteger(Number(valeurs.quantite)) || !(Number(valeurs.prix_unitaire) > 0))) throw new Error('Choisis une création existante dans le catalogue, une quantité entière et un prix unitaire supérieur à zéro.');
   if (nom === 'Mouvements' && (String(valeurs.type || '') !== 'transfert' || ['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
