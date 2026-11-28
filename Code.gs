@@ -558,13 +558,18 @@ function statistique_(d) {
   return { ok: true };
 }
 
+function envoyerMail_(options) {
+  try { MailApp.sendEmail(options); return true; }
+  catch (err) { console.error('E-mail non envoyé : ' + err.message); return false; }
+}
+
 function contact_(d, email) {
   const nom = net_(d.nom, 80), msg = net_(d.message, 1500);
   if (!nom || !msg) throw new Error('Nom et message obligatoires.');
   ajouter_('Messages', { date_heure: new Date(), nom: nom, email: email, message: msg });
-  MailApp.sendEmail({ to: config_().email_reception, replyTo: email,
+  const emailsOk = envoyerMail_({ to: config_().email_reception, replyTo: email,
     subject: 'Willbwa : message de ' + nom, body: msg + '\n\n' + email });
-  return { ok: true };
+  return { ok: true, emailsOk: emailsOk };
 }
 
 function reservation_(d, email) {
@@ -616,13 +621,13 @@ function reservation_(d, email) {
       (adresse ? '\nAdresse : ' + adresse : '') + '\nE-mail : ' + email + (net_(d.telephone, 30) ? '\nTéléphone : ' + net_(d.telephone, 30) : '') +
       (net_(d.note, 500) ? '\nMessage : ' + net_(d.note, 500) : '') + '\n\nLe PDF joint est à imprimer.' };
   if (pdf) mail.attachments = [pdf];
-  MailApp.sendEmail(mail);
-  MailApp.sendEmail({ to: email, replyTo: cfg.email_reception, name: 'Willbwa',
+  const mailReceptionOk = envoyerMail_(mail);
+  const mailClientOk = envoyerMail_({ to: email, replyTo: cfg.email_reception, name: 'Willbwa',
     subject: 'Willbwa : ta demande de réservation',
     body: 'Bonjour ' + client + ',\n\nMerci ! Voici ta demande :\n' + resume +
       '\n\nCe n’est pas encore une commande : je te réponds rapidement pour la confirmer.\n\nWillbwa · ' + SITE_URL,
     htmlBody: mailClientHtml_(cfg, client, lignes, remise, marche, adresse, net_(d.note, 500)) });
-  return { ok: true };
+  return { ok: true, emailsOk: mailReceptionOk && mailClientOk };
 }
 
 // Test : envoie une réservation fictive (supprime ensuite la ligne dans Reservations)
@@ -744,18 +749,18 @@ function projet_(d, email) {
   const mail = { to: cfg.email_reception, replyTo: email, subject: 'Willbwa : demande de projet de ' + prenom,
     body: infos.map(x => x[0] + ' : ' + x[1]).join('\n') + '\n\nE-mail : ' + email + '\n\nLe PDF joint est à imprimer.' };
   if (pj.length) mail.attachments = pj;
-  MailApp.sendEmail(mail);
+  const mailReceptionOk = envoyerMail_(mail);
   const F = 'font-family:Arial,Helvetica,sans-serif;', e = escH_;
   const lignes = infos.map(x => '<tr><td style="' + F + 'padding:6px 12px 6px 0;font-size:13px;color:#6f5a45;vertical-align:top;white-space:nowrap">' + e(x[0]) + '</td><td style="' + F + 'padding:6px 0;font-size:14px;color:#3a2616">' + e(x[1]).replace(/\n/g, '<br>') + '</td></tr>').join('');
   const contenu = '<tr><td style="padding:26px 24px 8px"><div style="' + F + 'font-size:20px;font-weight:bold;color:#3a2616">Merci ' + e(prenom) + ' !</div>' +
     '<p style="' + F + 'font-size:15px;line-height:1.5;color:#3a2616;margin:10px 0 0">J’ai bien reçu ta demande de projet. Voici ce que tu m’as indiqué :</p></td></tr>' +
     '<tr><td style="padding:6px 24px"><table role="presentation" style="border-collapse:collapse">' + lignes + '</table></td></tr>' +
     '<tr><td style="padding:10px 24px"><div style="' + F + 'background:#f1e3cb;border-radius:6px;padding:12px 14px;font-size:14px;line-height:1.5;color:#6b3d1c">Ceci est une <b>demande de projet</b>, pas une commande. Je regarde si c’est réalisable (et dans quel budget), puis je te réponds par e-mail. Il se peut aussi que ce ne soit pas possible : tu ne t’engages à rien avant que nous soyons d’accord. Tu peux répondre directement à ce message.</div></td></tr>';
-  MailApp.sendEmail({ to: email, replyTo: cfg.email_reception, name: 'Willbwa', subject: 'Willbwa : ta demande de projet',
+  const mailClientOk = envoyerMail_({ to: email, replyTo: cfg.email_reception, name: 'Willbwa', subject: 'Willbwa : ta demande de projet',
     body: 'Bonjour ' + prenom + ',\n\nMerci ! J’ai bien reçu ta demande de projet :\n' + infos.map(x => x[0] + ' : ' + x[1]).join('\n') +
       '\n\nCeci est une demande de projet, pas une commande : je regarde si c’est réalisable (et dans quel budget) puis je te réponds par e-mail.\n\nWillbwa · ' + SITE_URL,
     htmlBody: mailCadre_(cfg, contenu) });
-  return { ok: true };
+  return { ok: true, emailsOk: mailReceptionOk && mailClientOk };
 }
 
 function projetPdf_(prenom, email, infos) {
