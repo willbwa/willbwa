@@ -96,7 +96,7 @@ function dateTxt_(d) { return dateIso_(d); }
 // Valide une date civile ISO sans accepter les dates impossibles (ex. 2026-02-31).
 function dateValide_(v) {
   const t = String(v == null ? '' : v).trim();
-  const m = t.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);
+  const m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return false;
   const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
   return d.getUTCFullYear() === Number(m[1]) && d.getUTCMonth() + 1 === Number(m[2]) && d.getUTCDate() === Number(m[3]);
