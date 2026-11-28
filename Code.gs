@@ -317,7 +317,9 @@ function adminCreer_(d) {
   const schemas = {
     Depenses: ['date', 'description', 'notes', 'montant', 'mode_paiement', 'source', 'fournisseur'],
     Ventes: ['date', 'creation', 'quantite', 'prix_unitaire', 'lieu', 'mode_paiement', 'note'],
-    Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note']
+    Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note'],
+    Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre'],
+    Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin']
   };
   const nom = String(d.feuille || ''), entetes = schemas[nom];
   if (!entetes) throw new Error('Création non autorisée pour cette feuille.');
