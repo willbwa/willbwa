@@ -241,7 +241,9 @@ function rendreStockSiAnnulee_(f, ligne, h, ancienStatut) {
     f.getRange(ligne, cr + 1).setValue('non applicable : déjà remise');
     return;                                                                         // une pièce déjà remise ne revient pas en stock automatiquement
   }
-  if (String(f.getRange(ligne, cr + 1).getValue()).toLowerCase() === 'oui') return; // déjà remis : pas de double
+  // Toute marque existante est terminale : évite une double restitution si une opération
+  // précédente a été interrompue, ou si le retrait initial avait déjà été annulé.
+  if (String(f.getRange(ligne, cr + 1).getValue() || '').trim()) return;
   const cat = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Catalogue');
   if (!cat || cat.getLastRow() < 2) { f.getRange(ligne, cr + 1).setValue('à vérifier à la main'); return; }
   const d = cat.getDataRange().getValues(), idI = d[0].indexOf('id'), nomI = d[0].indexOf('nom'), qI = d[0].indexOf('quantite');
@@ -277,11 +279,19 @@ function rendreStockSiAnnulee_(f, ligne, h, ancienStatut) {
     else quantitesActuelles[i] = valeur;
   });
   if (!ok) { f.getRange(ligne, cr + 1).setValue('à vérifier à la main'); return; }
-  Object.keys(ajout).forEach(i => {
-    if (quantitesActuelles[i] !== null) cat.getRange(Number(i) + 1, qI + 1).setValue(quantitesActuelles[i] + ajout[i]);
-  });
-  f.getRange(ligne, cr + 1).setValue('oui');
-  cacheVider_();
+  // Marquer avant les écritures : si Apps Script s'interrompt au milieu, une relance
+  // ne doit surtout pas ajouter une deuxième fois les quantités déjà restaurées.
+  f.getRange(ligne, cr + 1).setValue('restitution en cours');
+  try {
+    Object.keys(ajout).forEach(i => {
+      if (quantitesActuelles[i] !== null) cat.getRange(Number(i) + 1, qI + 1).setValue(quantitesActuelles[i] + ajout[i]);
+    });
+    f.getRange(ligne, cr + 1).setValue('oui');
+    cacheVider_();
+  } catch (err) {
+    f.getRange(ligne, cr + 1).setValue('à vérifier à la main');
+    console.error('Restitution du stock interrompue pour la réservation ligne ' + ligne + ' : ' + err.message);
+  }
 }
 // À lancer à la main si besoin : traite toutes les réservations « annulée » dont les pièces n'ont pas encore été remises
 function rendreStockDesAnnulees() {
