@@ -108,20 +108,28 @@ const oui_ = v => String(v).trim().toLowerCase() === 'oui';
 // Stock d'un article : null = illimité (sur commande, ou colonne quantite vide)
 function reste_(p) {
   const d = String(p.disponibilite).trim().toLowerCase();
-  if (d !== 'en stock' || p.quantite === '' || p.quantite == null || isNaN(Number(p.quantite))) return null;
-  return Math.max(0, Number(p.quantite));
+  if (d !== 'en stock' || p.quantite === '' || p.quantite == null) return null;
+  const q = Number(p.quantite);
+  // Une quantité suivie mais illisible ne doit jamais être interprétée comme un stock illimité.
+  if (!Number.isInteger(q) || q < 0) return 0;
+  return q;
 }
 function retirerStock_(id, q) {
   const f = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Catalogue');
+  if (!f || f.getLastRow() < 2) throw new Error('Catalogue introuvable : stock non modifié.');
   const v = f.getDataRange().getValues(), h = v[0];
   const ci = h.indexOf('id'), cq = h.indexOf('quantite');
-  if (cq < 0) return;
+  if (ci < 0 || cq < 0) throw new Error('Colonnes de stock manquantes dans Catalogue.');
   for (let i = 1; i < v.length; i++) {
     if (String(v[i][ci]) === String(id)) {
-      if (v[i][cq] !== '' && !isNaN(Number(v[i][cq]))) f.getRange(i + 1, cq + 1).setValue(Math.max(0, Number(v[i][cq]) - q));
+      if (v[i][cq] === '' || v[i][cq] == null) return; // quantité vide : suivi de stock désactivé
+      const actuel = Number(v[i][cq]);
+      if (!Number.isInteger(actuel) || actuel < q || !Number.isInteger(q) || q < 1) throw new Error('Stock incohérent pour « ' + id + ' » : vérifie le Catalogue.');
+      f.getRange(i + 1, cq + 1).setValue(actuel - q);
       return;
     }
   }
+  throw new Error('Création introuvable dans Catalogue : stock non modifié.');
 }
 
 // Pièces réservées par des clients mais pas encore remises (statut ni « annulée » ni « remise ou envoyée »)
@@ -637,6 +645,8 @@ function reservation_(d, email) {
     statistique_({ evenement: 'reservation_recue', page: 'reservation' });
     lignes.forEach(l => statistique_({ evenement: 'article_reserve', page: 'reservation', article_id: l.id, article_nom: l.nom }));
   } catch (err) { console.error('Statistiques non enregistrées : ' + err.message); }
+  // Le verrou global de doPost empêche deux réservations simultanées de consommer le même stock.
+  // La quantité a déjà été contrôlée ; retirerStock_ vérifie encore chaque écriture.
   lignes.forEach(l => retirerStock_(l.id, l.q));   // la pièce est mise de côté pour ce client
   cacheVider_();
   const resume = txt + '\nTotal articles : ' + total.toFixed(2) + ' €';
