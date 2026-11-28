@@ -304,7 +304,7 @@ function adminModifier_(d) {
       if (cle === 'quantite' && !Number.isInteger(valeur)) throw new Error('La quantité doit être un nombre entier.');
       if (['montant', 'prix_unitaire'].indexOf(cle) >= 0 && valeur <= 0) throw new Error(cle + ' doit être supérieur à zéro.');
     } else {
-      const choix = { 'Catalogue.disponibilite':['en stock','sur commande','épuisé','ancien'], 'Catalogue.visible':['oui','non'], 'Marches.public':['oui','non'], 'Reservations.statut':['nouvelle','confirmée','payée','prête','remise ou envoyée','annulée'], 'Projets.statut':['nouvelle','en discussion','acceptée','refusée','terminée'], 'Depenses.mode_paiement':['liquide','banque'], 'Ventes.mode_paiement':['liquide','banque'], 'Mouvements.de':['liquide','banque'], 'Mouvements.vers':['liquide','banque'] };
+      const choix = { 'Catalogue.disponibilite':['en stock','sur commande','épuisé','ancien'], 'Catalogue.visible':['oui','non'], 'Marches.public':['oui','non'], 'Reservations.statut':['nouvelle','confirmée','payée','prête','remise ou envoyée','annulée'], 'Projets.statut':['nouvelle','en discussion','acceptée','refusée','terminée'], 'Depenses.mode_paiement':['liquide','banque'], 'Ventes.mode_paiement':['liquide','banque'], 'Mouvements.type':['transfert'], 'Mouvements.de':['liquide','banque'], 'Mouvements.vers':['liquide','banque'] };
       const autorisations = choix[nom + '.' + cle];
       if (autorisations && valeur !== '' && autorisations.indexOf(String(valeur)) < 0) throw new Error('Choix invalide pour ' + cle + '.');
       valeur = net_(valeur, cle === 'description' || cle === 'notes' ? 4000 : 1500);
@@ -316,7 +316,7 @@ function adminModifier_(d) {
     const actuel = f.getRange(ligne, 1, 1, entetes.length).getValues()[0], fusion = {};
     entetes.forEach(function (cle, i) { fusion[cle] = actuel[i]; });
     changements.forEach(function (c) { fusion[entetes[c.colonne - 1]] = c.valeur; });
-    if (nom === 'Mouvements' && (!(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.de)) < 0 || ['liquide','banque'].indexOf(String(fusion.vers)) < 0 || fusion.de === fusion.vers)) throw new Error('Un transfert doit avoir un montant positif et deux portefeuilles différents.');
+    if (nom === 'Mouvements' && (String(fusion.type) !== 'transfert' || !(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.de)) < 0 || ['liquide','banque'].indexOf(String(fusion.vers)) < 0 || fusion.de === fusion.vers)) throw new Error('Un transfert doit avoir un montant positif et deux portefeuilles différents.');
     if (nom === 'Ventes' && (!String(fusion.creation || '').trim() || !(Number(fusion.quantite) > 0) || !Number.isInteger(Number(fusion.quantite)) || !(Number(fusion.prix_unitaire) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une vente doit conserver une création, une quantité entière, un prix positif et un portefeuille valide.');
     if (nom === 'Depenses' && (!String(fusion.description || '').trim() || !(Number(fusion.montant) > 0) || ['liquide','banque'].indexOf(String(fusion.mode_paiement)) < 0)) throw new Error('Une dépense doit conserver une description, un montant positif et un portefeuille valide.');
   }
@@ -354,7 +354,7 @@ function adminCreer_(d) {
   if (['Depenses', 'Ventes'].indexOf(nom) >= 0 && ['liquide', 'banque'].indexOf(String(valeurs.mode_paiement || '')) < 0) throw new Error('Choisis liquide ou banque pour le portefeuille.');
   if (nom === 'Depenses' && (!valeurs.description || !(Number(valeurs.montant) > 0))) throw new Error('La dépense doit avoir une description et un montant supérieur à zéro.');
   if (nom === 'Ventes' && (!valeurs.creation || !(Number(valeurs.quantite) > 0) || !Number.isInteger(Number(valeurs.quantite)) || !(Number(valeurs.prix_unitaire) > 0))) throw new Error('Choisis une création, une quantité entière et un prix unitaire supérieur à zéro.');
-  if (nom === 'Mouvements' && (['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
+  if (nom === 'Mouvements' && (String(valeurs.type || '') !== 'transfert' || ['liquide', 'banque'].indexOf(String(valeurs.de || '')) < 0 || ['liquide', 'banque'].indexOf(String(valeurs.vers || '')) < 0 || valeurs.de === valeurs.vers || !(Number(valeurs.montant) > 0))) throw new Error('Un transfert doit avoir deux portefeuilles différents et un montant positif.');
   if (nom === 'Catalogue' && !valeurs.id) valeurs.id = Utilities.getUuid();
   if (nom === 'Catalogue' && !valeurs.nom) throw new Error('Le nom de la création est obligatoire.');
   if (nom === 'Marches' && !valeurs.lieu) throw new Error('Le lieu du marché est obligatoire.');
@@ -458,6 +458,7 @@ function adminLire_() {
         const p = portefeuille_(l[ix.mode_paiement]);
         if (p) financier[p] -= total;
       } else {
+        if (String(l[ix.type] || '') !== 'transfert') return;
         const total = montant_(l[ix.montant]);
         const de = portefeuille_(l[ix.de]), vers = portefeuille_(l[ix.vers]);
         if (de) financier[de] -= total;
