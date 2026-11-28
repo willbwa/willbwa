@@ -131,12 +131,20 @@ function preparerRetraitStock_(lignes) {
     if (v[i][cq] === '' || v[i][cq] == null) return; // quantité vide : suivi de stock désactivé
     const actuel = Number(v[i][cq]);
     if (!Number.isInteger(actuel) || actuel < q) throw new Error('Stock incohérent pour « ' + id + ' » : vérifie le Catalogue.');
-    retraits.push({ ligne: i + 1, quantite: actuel - q });
+    retraits.push({ ligne: i + 1, avant: actuel, apres: actuel - q });
   });
   return { feuille: f, colonne: cq + 1, retraits: retraits };
 }
 function retirerStockPrepare_(plan) {
-  plan.retraits.forEach(r => plan.feuille.getRange(r.ligne, plan.colonne).setValue(r.quantite));
+  plan.retraits.forEach(r => plan.feuille.getRange(r.ligne, plan.colonne).setValue(r.apres));
+}
+function annulerRetraitStock_(plan) {
+  let ok = true;
+  plan.retraits.slice().reverse().forEach(r => {
+    try { plan.feuille.getRange(r.ligne, plan.colonne).setValue(r.avant); }
+    catch (err) { ok = false; console.error('Restauration du stock impossible, ligne ' + r.ligne + ' : ' + err.message); }
+  });
+  return ok;
 }
 
 // Pièces réservées par des clients mais pas encore remises (statut ni « annulée » ni « remise ou envoyée »)
@@ -655,11 +663,13 @@ function reservation_(d, email) {
   try {
     retirerStockPrepare_(planStock);
   } catch (err) {
-    // La réservation existe déjà : signaler explicitement qu'une vérification manuelle est requise.
+    // Tenter de remettre toutes les quantités d'origine si une écriture a échoué à mi-parcours.
+    const stockRestaure = annulerRetraitStock_(planStock);
     const hReservations = feuilleReservations.getRange(1, 1, 1, feuilleReservations.getLastColumn()).getValues()[0];
     const cRendu = hReservations.indexOf('stock_rendu');
-    if (cRendu >= 0) feuilleReservations.getRange(ligneReservation, cRendu + 1).setValue('à vérifier à la main');
-    throw new Error('Réservation enregistrée, mais le stock doit être vérifié à la main. Contacte Willbwa avant de recommencer.');
+    if (cRendu >= 0) feuilleReservations.getRange(ligneReservation, cRendu + 1).setValue(stockRestaure ? 'retrait annulé : stock restauré' : 'à vérifier à la main');
+    if (stockRestaure) throw new Error('La réservation a été enregistrée, mais le retrait du stock a échoué et a été annulé. Ne recommence pas : contacte Willbwa pour vérifier la réservation.');
+    throw new Error('La réservation a été enregistrée et le stock doit être vérifié à la main. Ne recommence pas : contacte Willbwa.');
   }
   try {
     statistique_({ evenement: 'reservation_recue', page: 'reservation' });
