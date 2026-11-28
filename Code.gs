@@ -206,15 +206,19 @@ function onEdit(e) {
     const f = e && e.range && e.range.getSheet();
     if (!f || f.getName() !== 'Reservations' || e.range.getRow() < 2) return;
     const h = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0];
-    if (e.range.getColumn() === h.indexOf('statut') + 1) rendreStockSiAnnulee_(f, e.range.getRow(), h);
+    if (e.range.getColumn() === h.indexOf('statut') + 1) rendreStockSiAnnulee_(f, e.range.getRow(), h, e.oldValue);
   } catch (err) {}
 }
-function rendreStockSiAnnulee_(f, ligne, h) {
+function rendreStockSiAnnulee_(f, ligne, h, ancienStatut) {
   const colonne = nom => { let i = h.indexOf(nom); if (i < 0) { i = h.length; f.getRange(1, i + 1).setValue(nom); h.push(nom); } return i; };   // crée la colonne si elle manque
   const si = h.indexOf('statut');
   if (si < 0 || String(f.getRange(ligne, si + 1).getValue()).toLowerCase().indexOf('annul') !== 0) return;
   const ci = colonne('ids_qte'), cr = colonne('stock_rendu');
-  if (f.getRange(ligne, cr + 1).getValue() === 'oui') return;                       // déjà remis : pas de double
+  if (String(ancienStatut || '').trim().toLowerCase().indexOf('remise') === 0) {
+    f.getRange(ligne, cr + 1).setValue('non applicable : déjà remise');
+    return;                                                                         // une pièce déjà remise ne revient pas en stock automatiquement
+  }
+  if (String(f.getRange(ligne, cr + 1).getValue()).toLowerCase() === 'oui') return; // déjà remis : pas de double
   const cat = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Catalogue');
   const d = cat.getDataRange().getValues(), idI = d[0].indexOf('id'), nomI = d[0].indexOf('nom'), qI = d[0].indexOf('quantite');
   if (qI < 0) return;
@@ -342,7 +346,7 @@ function adminModifier_(d) {
   }
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
   if (nom === 'Reservations' && d.champs.statut !== undefined && String(d.champs.statut).trim().toLowerCase().indexOf('annul') === 0) {
-    rendreStockSiAnnulee_(f, ligne, entetes);
+    rendreStockSiAnnulee_(f, ligne, entetes, ancienStatutReservation);
   }
   cacheVider_();
   return { ok: true, feuille: nom, ligne: ligne };
