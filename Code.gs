@@ -828,10 +828,11 @@ function nettoyerDonnees() {
       const final = si < 0 ? supprimerLigne : estFinal(String(v[i][si]).trim().toLowerCase()); // sans statut, ne jamais anonymiser une demande encore potentiellement active
       if (!(date < s2 || (final && date < s1))) continue;            // pas encore l'heure
       if (supprimerLigne) { f.deleteRow(i + 1); c++; continue; }
-      if (String(v[i][h.indexOf(perso[0])]) === '(supprimé)') continue;   // déjà fait
-      if (colPhotos) String(v[i][h.indexOf(colPhotos)]).split(/\s+/).forEach(u => { const m = u.match(/[-\w]{25,}/); if (m) { try { DriveApp.getFileById(m[0]).setTrashed(true); } catch (err) {} } });
+      const marquePerso = h.indexOf(perso[0]), photoIndex = colPhotos ? h.indexOf(colPhotos) : -1;
+      if (marquePerso >= 0 && String(v[i][marquePerso]) === '(supprimé)') continue;   // déjà fait
+      if (photoIndex >= 0) String(v[i][photoIndex] || '').split(/\s+/).forEach(u => { const m = u.match(/[-\w]{25,}/); if (m) { try { DriveApp.getFileById(m[0]).setTrashed(true); } catch (err) {} } });
       perso.forEach((k, j) => { const ci = h.indexOf(k); if (ci >= 0) f.getRange(i + 1, ci + 1).setValue(j === 0 ? '(supprimé)' : ''); });
-      if (colPhotos) f.getRange(i + 1, h.indexOf(colPhotos) + 1).setValue('');
+      if (photoIndex >= 0) f.getRange(i + 1, photoIndex + 1).setValue('');
       c++;
     }
     if (c) resume.push(nom + ' : ' + c);
