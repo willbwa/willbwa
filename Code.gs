@@ -852,9 +852,18 @@ function projet_(d, email) {
   const infos = [['Type', creation ? 'Création personnalisée à partir d’une pièce' : 'Projet à imaginer ensemble'], ['Création de départ', creation ? t('creation') : ''],
     ['Projet', t('projet')], ['À quoi servirait-il', t('usage')], ['À modifier', t('modification')], ['Description', t('description')],
     ['Dimensions', t('dimensions')], ['Bois souhaité', t('bois')], ['Budget approximatif', t('budget')], ['Photos', blobs.length ? blobs.length + ' (jointes à ce mail)' : '']].filter(x => x[1]);
-  ajouter_('Projets', { date_heure: new Date(), type: creation ? 'Personnalisé' : 'Projet à imaginer', creation: creation ? t('creation') : '', prenom: prenom, email: email,
-    projet: t('projet'), usage: t('usage'), modification: t('modification'), description: t('description'), dimensions: t('dimensions'),
-    bois: t('bois'), budget: t('budget'), photos: liens.join('\n'), statut: 'nouvelle' });
+  try {
+    ajouter_('Projets', { date_heure: new Date(), type: creation ? 'Personnalisé' : 'Projet à imaginer', creation: creation ? t('creation') : '', prenom: prenom, email: email,
+      projet: t('projet'), usage: t('usage'), modification: t('modification'), description: t('description'), dimensions: t('dimensions'),
+      bois: t('bois'), budget: t('budget'), photos: liens.join('\n'), statut: 'nouvelle' });
+  } catch (err) {
+    // Si la demande ne peut pas être enregistrée, supprimer les photos déjà envoyées dans Drive.
+    fichiersCrees.forEach(f => {
+      try { f.setTrashed(true); }
+      catch (e) { console.error('Nettoyage photo après échec d’enregistrement impossible : ' + e.message); }
+    });
+    throw new Error('La demande n’a pas pu être enregistrée. Réessaie dans quelques instants ou contacte Willbwa.');
+  }
   let pdf = null;
   try { pdf = projetPdf_(prenom, email, infos); } catch (err) { console.error(err); }
   const pj = blobs.slice(); if (pdf) pj.unshift(pdf);
