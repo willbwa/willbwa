@@ -376,7 +376,7 @@ function adminLire_() {
   const noms = ['Catalogue', 'Marches', 'Reservations', 'Messages', 'Projets', 'Statistiques',
     'Depenses', 'Ventes', 'Mouvements'];
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const donnees = {};
+  const donnees = {}, compteurs = {};
   noms.forEach(function (nom) {
     const feuille = ss.getSheetByName(nom);
     if (!feuille || feuille.getLastRow() < 1) {
@@ -385,10 +385,12 @@ function adminLire_() {
     }
     const valeurs = feuille.getDataRange().getValues();
     const entetes = valeurs.shift().map(function (v) { return String(v || ''); });
-    donnees[nom] = valeurs.map(function (ligne, index) { return { ligne: ligne, numero: index + 2 }; })
+    const lignesNonVides = valeurs.map(function (ligne, index) { return { ligne: ligne, numero: index + 2 }; })
       .filter(function (item) {
         return item.ligne.some(function (cellule) { return cellule !== ''; });
-      }).slice(-1500).map(function (item) {
+      });
+    compteurs[nom] = lignesNonVides.length;
+    donnees[nom] = lignesNonVides.slice(-1500).map(function (item) {
         const objet = { __ligne: item.numero }, ligne = item.ligne;
         entetes.forEach(function (cle, i) {
           if (cle) objet[cle] = ligne[i] instanceof Date
@@ -457,7 +459,7 @@ function adminLire_() {
       }
     });
   });
-  return { ok: true, donnees: donnees, statistiquesResume: resume, resumeFinancier: financier };
+  return { ok: true, donnees: donnees, compteurs: compteurs, statistiquesResume: resume, resumeFinancier: financier };
 }
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
