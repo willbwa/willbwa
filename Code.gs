@@ -301,7 +301,12 @@ function adminModifier_(d) {
     if (['prix', 'montant', 'quantite', 'prix_unitaire', 'ordre'].indexOf(cle) >= 0 && valeur !== '') {
       valeur = Number(valeur);
       if (!isFinite(valeur) || valeur < 0) throw new Error('Valeur numérique invalide pour ' + cle);
+      if (cle === 'quantite' && !Number.isInteger(valeur)) throw new Error('La quantité doit être un nombre entier.');
+      if (['montant', 'prix_unitaire'].indexOf(cle) >= 0 && valeur <= 0) throw new Error(cle + ' doit être supérieur à zéro.');
     } else {
+      const choix = { 'Catalogue.disponibilite':['en stock','sur commande','épuisé','ancien'], 'Catalogue.visible':['oui','non'], 'Marches.public':['oui','non'], 'Reservations.statut':['nouvelle','confirmée','payée','prête','remise ou envoyée','annulée'], 'Projets.statut':['nouvelle','en discussion','acceptée','refusée','terminée'], 'Depenses.mode_paiement':['liquide','banque'], 'Ventes.mode_paiement':['liquide','banque'], 'Mouvements.de':['liquide','banque'], 'Mouvements.vers':['liquide','banque'] };
+      const autorisations = choix[nom + '.' + cle];
+      if (autorisations && valeur !== '' && autorisations.indexOf(String(valeur)) < 0) throw new Error('Choix invalide pour ' + cle + '.');
       valeur = net_(valeur, cle === 'description' || cle === 'notes' ? 4000 : 1500);
     }
     changements.push({ colonne: entetes.indexOf(cle) + 1, valeur: valeur });
