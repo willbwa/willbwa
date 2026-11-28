@@ -336,8 +336,8 @@ function adminModifier_(d) {
     const si = entetes.indexOf('statut'), ri = entetes.indexOf('stock_rendu');
     ancienStatutReservation = si >= 0 ? String(f.getRange(ligne, si + 1).getValue() || '').trim().toLowerCase() : '';
     const nouveauStatut = String(d.champs.statut || '').trim().toLowerCase();
-    if (ancienStatutReservation.indexOf('annul') === 0 && nouveauStatut.indexOf('annul') !== 0 && ri >= 0 && String(f.getRange(ligne, ri + 1).getValue()).toLowerCase() === 'oui') {
-      throw new Error('Cette réservation a déjà été annulée et son stock remis. Pour éviter un stock incorrect, crée une nouvelle réservation plutôt que de réactiver celle-ci.');
+    if (ancienStatutReservation.indexOf('annul') === 0 && nouveauStatut.indexOf('annul') !== 0) {
+      throw new Error('Cette réservation a déjà été annulée. Pour éviter un stock incorrect, crée une nouvelle réservation plutôt que de la réactiver.');
     }
   }
   changements.forEach(function (c) { f.getRange(ligne, c.colonne).setValue(c.valeur); });
