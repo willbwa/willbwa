@@ -398,7 +398,32 @@ function adminLire_() {
         return objet;
       });
   });
-  return { ok: true, donnees: donnees };
+  // Les compteurs du tableau de bord portent sur tout l'historique, même si le tableau brut
+  // est limité aux 1 500 derniers événements pour garder l'espace privé rapide.
+  const resume = { evenements: {}, pages: {}, articles: {} };
+  const stats = ss.getSheetByName('Statistiques');
+  if (stats && stats.getLastRow() >= 2) {
+    const valeursStats = stats.getDataRange().getValues();
+    const entetesStats = valeursStats.shift().map(function (v) { return String(v || ''); });
+    const idx = {};
+    entetesStats.forEach(function (k, i) { idx[k] = i; });
+    valeursStats.forEach(function (ligne) {
+      if (!ligne.some(function (v) { return v !== ''; })) return;
+      const evenement = String(ligne[idx.evenement] || '');
+      resume.evenements[evenement] = (resume.evenements[evenement] || 0) + 1;
+      if (evenement === 'visite') {
+        const page = String(ligne[idx.page] || 'autre');
+        resume.pages[page] = (resume.pages[page] || 0) + 1;
+      }
+      if (evenement === 'article_consulte' || evenement === 'ajout_selection') {
+        const nomArticle = String(ligne[idx.article_nom] || ligne[idx.article_id] || 'Création');
+        if (!resume.articles[nomArticle]) resume.articles[nomArticle] = { vues: 0, selections: 0 };
+        if (evenement === 'article_consulte') resume.articles[nomArticle].vues++;
+        if (evenement === 'ajout_selection') resume.articles[nomArticle].selections++;
+      }
+    });
+  }
+  return { ok: true, donnees: donnees, statistiquesResume: resume };
 }
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
