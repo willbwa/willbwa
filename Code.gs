@@ -233,6 +233,17 @@ function onEdit(e) {
   } catch (err) {}
 }
 function rendreStockSiAnnulee_(f, ligne, h, ancienStatut) {
+  // Sérialiser les annulations concurrentes : deux administrateurs ne doivent pas
+  // restituer deux fois le stock de la même réservation.
+  const verrou = LockService.getScriptLock();
+  verrou.waitLock(15000);
+  try {
+    return rendreStockSiAnnuleeVerrouillee_(f, ligne, h, ancienStatut);
+  } finally {
+    verrou.releaseLock();
+  }
+}
+function rendreStockSiAnnuleeVerrouillee_(f, ligne, h, ancienStatut) {
   const colonne = nom => { let i = h.indexOf(nom); if (i < 0) { i = h.length; f.getRange(1, i + 1).setValue(nom); h.push(nom); } return i; };   // crée la colonne si elle manque
   const si = h.indexOf('statut');
   if (si < 0 || String(f.getRange(ligne, si + 1).getValue()).toLowerCase().indexOf('annul') !== 0) return;
