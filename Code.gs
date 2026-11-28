@@ -488,40 +488,56 @@ function adminLire_() {
   }
   // Soldes et résultat calculés sur tout l'historique, pas seulement les 1 500 lignes affichées.
   const financier = { ventes: 0, depenses: 0, liquide: 0, banque: 0 };
-  const montant_ = function (v) { const n = Number(v); return isFinite(n) ? n : 0; };
+  const alertesFinancieres = [];
+  const montant_ = function (v) { if (v === '' || v === null || v === undefined) return NaN; const n = Number(v); return isFinite(n) ? n : NaN; };
   const portefeuille_ = function (v) {
     const m = String(v || '').trim().toLowerCase();
     if (['liquide', 'espèces', 'especes', 'cash'].indexOf(m) >= 0) return 'liquide';
     if (['banque', 'virement', 'qr', 'carte'].indexOf(m) >= 0) return 'banque';
     return '';
   };
+  const schemasFinanciers = {
+    Ventes: ['quantite', 'prix_unitaire', 'mode_paiement'],
+    Depenses: ['montant', 'mode_paiement'],
+    Mouvements: ['type', 'montant', 'de', 'vers']
+  };
   ['Ventes', 'Depenses', 'Mouvements'].forEach(function (nom) {
     const feuille = ss.getSheetByName(nom);
     if (!feuille || feuille.getLastRow() < 2) return;
     const lignes = feuille.getDataRange().getValues();
     const entetes = lignes.shift().map(function (v) { return String(v || ''); });
+    const absents = schemasFinanciers[nom].filter(function (cle) { return entetes.indexOf(cle) < 0; });
+    if (absents.length) {
+      alertesFinancieres.push(nom + ' : colonnes manquantes (' + absents.join(', ') + '). Totaux de cet onglet non calculés.');
+      return;
+    }
     const ix = {}; entetes.forEach(function (k, i) { ix[k] = i; });
+    let lignesInvalides = 0, paiementsInconnus = 0;
     lignes.forEach(function (l) {
+      if (!l.some(function (v) { return v !== ''; })) return;
       if (nom === 'Ventes') {
-        const total = montant_(l[ix.quantite]) * montant_(l[ix.prix_unitaire]);
+        const q = montant_(l[ix.quantite]), prix = montant_(l[ix.prix_unitaire]), p = portefeuille_(l[ix.mode_paiement]);
+        if (!(q > 0) || !Number.isInteger(q) || !(prix > 0)) { lignesInvalides++; return; }
+        const total = q * prix;
         financier.ventes += total;
-        const p = portefeuille_(l[ix.mode_paiement]);
-        if (p) financier[p] += total;
+        if (p) financier[p] += total; else paiementsInconnus++;
       } else if (nom === 'Depenses') {
-        const total = montant_(l[ix.montant]);
+        const total = montant_(l[ix.montant]), p = portefeuille_(l[ix.mode_paiement]);
+        if (!(total > 0)) { lignesInvalides++; return; }
         financier.depenses += total;
-        const p = portefeuille_(l[ix.mode_paiement]);
-        if (p) financier[p] -= total;
+        if (p) financier[p] -= total; else paiementsInconnus++;
       } else {
         if (String(l[ix.type] || '') !== 'transfert') return;
-        const total = montant_(l[ix.montant]);
-        const de = portefeuille_(l[ix.de]), vers = portefeuille_(l[ix.vers]);
-        if (de) financier[de] -= total;
-        if (vers) financier[vers] += total;
+        const total = montant_(l[ix.montant]), de = portefeuille_(l[ix.de]), vers = portefeuille_(l[ix.vers]);
+        if (!(total > 0) || !de || !vers || de === vers) { lignesInvalides++; return; }
+        financier[de] -= total;
+        financier[vers] += total;
       }
     });
+    if (lignesInvalides) alertesFinancieres.push(nom + ' : ' + lignesInvalides + ' ligne(s) invalide(s) ignorée(s) dans les calculs.');
+    if (paiementsInconnus) alertesFinancieres.push(nom + ' : ' + paiementsInconnus + ' ligne(s) avec portefeuille inconnu ; incluses dans le total, mais pas dans les soldes liquide/banque.');
   });
-  return { ok: true, donnees: donnees, compteurs: compteurs, statistiquesResume: resume, resumeFinancier: financier };
+  return { ok: true, donnees: donnees, compteurs: compteurs, statistiquesResume: resume, resumeFinancier: financier, alertesFinancieres: alertesFinancieres };
 }
 
 // Statistiques anonymes : aucun nom, e-mail, adresse, cookie ou identifiant visiteur n'est enregistré.
