@@ -220,15 +220,25 @@ function rendreStockSiAnnulee_(f, ligne, h, ancienStatut) {
   }
   if (String(f.getRange(ligne, cr + 1).getValue()).toLowerCase() === 'oui') return; // déjà remis : pas de double
   const cat = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Catalogue');
+  if (!cat || cat.getLastRow() < 2) { f.getRange(ligne, cr + 1).setValue('à vérifier à la main'); return; }
   const d = cat.getDataRange().getValues(), idI = d[0].indexOf('id'), nomI = d[0].indexOf('nom'), qI = d[0].indexOf('quantite');
-  if (qI < 0) return;
+  if (qI < 0 || idI < 0) { f.getRange(ligne, cr + 1).setValue('à vérifier à la main'); return; }
   const ajout = {}; let ok = true, n = 0;
-  const poser = (i, q) => { if (i > 0) { ajout[i] = (ajout[i] || 0) + q; n++; } else ok = false; };
+  const poser = (i, q) => {
+    if (i > 0 && Number.isInteger(q) && q > 0) { ajout[i] = (ajout[i] || 0) + q; n++; }
+    else ok = false;
+  };
   const ids = String(f.getRange(ligne, ci + 1).getValue() || '');
   if (ids) {                                                                        // réservations récentes : « id:quantité;id:quantité »
-    ids.split(';').forEach(p => { const a = p.split(':'); poser(d.findIndex((r, k) => k > 0 && String(r[idI]) === a[0]), Number(a[1])); });
-  } else {                                                                          // anciennes réservations (tests) : on relit le texte de la colonne articles
-    String(f.getRange(ligne, h.indexOf('articles') + 1).getValue() || '').split('\n').forEach(t => {
+    ids.split(';').forEach(p => {
+      const a = p.split(':');
+      if (a.length !== 2 || !a[0]) { ok = false; return; }
+      poser(d.findIndex((r, k) => k > 0 && String(r[idI]) === a[0]), Number(a[1]));
+    });
+  } else {                                                                          // anciennes réservations : relire le texte des articles
+    const ai = h.indexOf('articles');
+    if (ai < 0) ok = false;
+    else String(f.getRange(ligne, ai + 1).getValue() || '').split('\n').forEach(t => {
       const m = t.match(/^\s*(\d+)\s×\s(.+?)\s\(\d+[.,]\d{2}\s€\)/);
       if (m) poser(d.findIndex((r, k) => k > 0 && String(r[nomI]).trim() === m[2].trim()), Number(m[1]));
     });
