@@ -278,7 +278,7 @@ function adminModifier_(d) {
     Catalogue: ['nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'visible', 'essence', 'dimensions', 'finition', 'ordre'],
     Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
     Reservations: ['statut', 'note', 'remise', 'marche', 'adresse'],
-    Projets: ['statut'],
+    Projets: ['statut', 'creation', 'usage', 'modification', 'description', 'dimensions', 'bois', 'budget'],
     Depenses: ['date', 'description', 'notes', 'montant', 'mode_paiement', 'source', 'fournisseur'],
     Ventes: ['date', 'creation', 'quantite', 'prix_unitaire', 'lieu', 'mode_paiement', 'note'],
     Mouvements: ['date', 'type', 'montant', 'de', 'vers', 'note']
