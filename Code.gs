@@ -4,7 +4,7 @@ const SITE_URL = 'https://willbwa.github.io/willbwa/';
 const INSTA_URL = 'https://www.instagram.com/artisan_willbwa/';
 
 const ONGLETS = {
-  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'quantite', 'visible', 'quantite', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
+  Catalogue: ['id', 'nom', 'categorie', 'description', 'prix', 'photo', 'disponibilite', 'quantite', 'visible', 'essence', 'dimensions', 'finition', 'ordre', 'cout_fabrication'],
   Marches: ['date', 'lieu', 'horaires', 'remarque', 'public', 'photos', 'date_fin'],
   Reservations: ['date_heure', 'client', 'email', 'telephone', 'remise', 'marche', 'adresse', 'articles', 'total', 'statut', 'note', 'ids_qte', 'stock_rendu'],
   Messages: ['date_heure', 'nom', 'email', 'message'],
@@ -28,7 +28,7 @@ function creerStructure() {
     ss.getSheetByName(nom).getRange(2, col, 500, 1).setDataValidation(
       SpreadsheetApp.newDataValidation().requireValueInList(vals, true).setAllowInvalid(false).build()));
   liste('Catalogue', 7, ['en stock', 'sur commande', 'épuisé', 'ancien']);
-  liste('Catalogue', 8, ['oui', 'non']);
+  liste('Catalogue', 9, ['oui', 'non']);
   essai('liste de choix de l’ordre esthétique', () => {
     const f = ss.getSheetByName('Catalogue'), h = f.getRange(1, 1, 1, f.getLastColumn()).getValues()[0], col = h.indexOf('ordre') + 1;
     if (col > 0) f.getRange(2, col, 500, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['1','2','3','4','5'], true).setAllowInvalid(false).build());
